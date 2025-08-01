@@ -1,0 +1,27 @@
+{
+  "name": "todo-mcp-server",
+  "version": "1.0.0",
+  "description": "A simple MCP server for managing todos",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "viem": "^2.33.2",
+    "x402-express": "^0.4.2",
+    "zod": "^3.25.64"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
