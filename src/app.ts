@@ -1,3 +1,5 @@
+import { config as dotenvConfig } from "dotenv";
+import path from "path";
 import express, { Express } from "express";
 import * as service from "./service.js";
 import { extractFromAuthHeader } from "./util.js";
@@ -6,6 +8,9 @@ import cors from "cors";
 import { paymentMiddleware } from "x402-express";
 import { config } from "./config.js";
 import { createDynamicMcpPaymentMiddleware } from "./x402Integration.js";
+
+// Load environment variables
+dotenvConfig({ path: path.join(process.cwd(), ".env") });
 
 const app: Express = express();
 

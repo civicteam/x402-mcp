@@ -101,3 +101,80 @@ For testnet:
 For mainnet:
 - Network: `base`
 - Facilitator: `https://facilitator.coinbase.com/facilitator`
+
+## X402 MCP Client
+
+This project includes a client implementation that can call the MCP server with automatic X402 payment handling.
+
+### How it Works
+
+The client uses the standard MCP SDK with a custom fetch implementation provided by `@ecdysis/x402-fetch`:
+
+1. Uses `StreamableHTTPClientTransport` with custom fetch option
+2. Wraps standard fetch with x402 payment capabilities
+3. Automatically handles 402 Payment Required responses
+4. Creates payment transactions and retries requests with proof of payment
+
+### Client Setup
+
+1. Generate a new wallet (or use an existing one):
+   ```bash
+   pnpm generate-wallet > .env
+   ```
+   This will generate a new private key using viem and create a `.env` file with all necessary configuration.
+   
+2. Fund your wallet with USDC on Base Sepolia (testnet) or Base (mainnet)
+   - For testnet USDC, use a faucet or bridge from Ethereum Sepolia
+
+3. The `.env` file will be automatically configured with:
+   - `PRIVATE_KEY` - Your wallet's private key
+   - `WALLET_ADDRESS` - Your wallet's address (for receiving payments as a seller)
+   - `PAYMENT_NETWORK` - Default: base-sepolia
+   - `FACILITATOR_URL` - Default: https://x402.org/facilitator
+   - `MCP_SERVER_URL` - Default: http://localhost:3000/mcp
+
+### Running the Client Example
+
+```bash
+# Start the server first
+pnpm dev
+
+# In another terminal, run the client example
+pnpm example
+```
+
+The example will:
+1. Connect to the MCP server
+2. List available tools and their prices
+3. Call various tools (list-todos, add-todo, delete-todo)
+4. Automatically handle payments for each tool call
+
+### Client Implementation
+
+The client implementation (`src/client/mcpClientWithX402.ts`) provides a `createMcpClientWithX402` function that:
+- Creates a standard MCP SDK `Client` instance
+- Configures `StreamableHTTPClientTransport` with x402-enabled fetch
+- Returns a client that automatically handles payments
+
+Example usage:
+```typescript
+import { createMcpClientWithX402 } from "./client/mcpClientWithX402.js";
+
+const client = await createMcpClientWithX402({
+  serverUrl: "http://localhost:3000/mcp",
+  privateKey: "0x...",
+  network: "base-sepolia",
+});
+
+// Use the client normally - payments are handled automatically
+const result = await client.callTool({
+  name: "list-todos",
+  arguments: {},
+});
+```
+
+### Troubleshooting
+
+1. **Insufficient Balance**: Ensure your wallet has enough USDC to cover the tool costs
+2. **Wrong Network**: Make sure your wallet is configured for the same network as the server (base-sepolia for testnet)
+3. **Private Key**: The private key must start with "0x" and be 64 hex characters long
