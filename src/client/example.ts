@@ -2,6 +2,7 @@
 import { createMcpClientWithX402 } from "./mcpClientWithX402.js";
 import { config } from "dotenv";
 import path from "path";
+import { privateKeyToAccount } from "viem/accounts";
 
 // Load environment variables from .env file
 config({ path: path.join(process.cwd(), ".env") });
@@ -11,19 +12,19 @@ config({ path: path.join(process.cwd(), ".env") });
  */
 
 async function main() {
-  const PRIVATE_KEY = process.env.PRIVATE_KEY as `0x${string}`;
+  const PRIVATE_KEY = process.env.SENDER_PRIVATE_KEY as `0x${string}`;
   const MCP_SERVER_URL = process.env.MCP_SERVER_URL || "http://localhost:3000/mcp";
 
   if (!PRIVATE_KEY) {
     console.error("❌ No private key found!");
     console.error("\nPlease run 'pnpm generate-wallet' to create a new wallet");
-    console.error("or add PRIVATE_KEY to your .env file");
+    console.error("or add SENDER_PRIVATE_KEY to your .env file");
     process.exit(1);
   }
 
   try {
     console.log("=== MCP Client with X402 Payment Support ===\n");
-    
+
     // Create client with x402 payments
     const client = await createMcpClientWithX402({
       serverUrl: MCP_SERVER_URL,
@@ -50,6 +51,9 @@ async function main() {
       arguments: {},
     });
     console.log("   Result:", JSON.stringify(listResult.content, null, 2));
+    if ((listResult as any).x402Settlement) {
+      console.log("   💰 Payment settled:", (listResult as any).x402Settlement);
+    }
 
     // Add a todo (costs $0.002)
     console.log("\n2. Adding a todo...");
@@ -83,8 +87,20 @@ async function main() {
     await client.close();
     console.log("\n✅ Client disconnected successfully");
 
-  } catch (error) {
-    console.error("\n❌ Error:", error);
+  } catch (error: any) {
+    console.error("\n❌ Error:", error.message || error);
+
+    // Check if it's an insufficient funds error
+    if (error.message?.includes('insufficient_funds')) {
+      console.error("\n💰 Insufficient USDC balance!");
+      console.error(`   Wallet: ${PRIVATE_KEY ? privateKeyToAccount(PRIVATE_KEY).address : 'Unknown'}`);
+      console.error("   Network: Base Sepolia");
+      console.error("   Token: USDC (0x036CbD53842c5426634e7929541eC2318f3dCF7e)");
+      console.error("\n   To get testnet USDC:");
+      console.error("   1. Bridge from Ethereum Sepolia");
+      console.error("   2. Use a faucet that supports Base Sepolia USDC");
+    }
+
     process.exit(1);
   }
 }

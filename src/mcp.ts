@@ -1,7 +1,7 @@
 import {McpServer} from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as service from "./service.js";
 import z from "zod";
-import {StreamableHTTPServerTransport} from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { X402StreamableHTTPServerTransport } from "./x402Transport.js";
 import { config } from "./config.js";
 
 export async function createMcpServer() {
@@ -62,17 +62,15 @@ export async function createMcpServer() {
       }
   )
 
-  const transport = new StreamableHTTPServerTransport({
+  // Create X402 transport with payment configuration
+  const transport = new X402StreamableHTTPServerTransport({
+    payTo: config.payment.walletAddress,
+    routes: config.payment.mcpRoutes,
+    toolPricing: config.payment.mcpPricing,
     sessionIdGenerator: undefined
   })
 
   await mcpServer.connect(transport);
 
   return {transport, mcpServer};
-}
-
-export async function runMcpServer() {
-  const {mcpServer, transport} = await createMcpServer();
-  // The server is already connected via createMcpServer
-  console.log("MCP server running in standalone mode");
 }

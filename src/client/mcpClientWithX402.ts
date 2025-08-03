@@ -4,6 +4,7 @@ import { createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { baseSepolia, base } from "viem/chains";
 import { wrapFetchWithPayment } from "@ecdysis/x402-fetch";
+import {RequestInfo} from "@modelcontextprotocol/sdk/types.js";
 
 /**
  * Creates an MCP client with x402 payment capabilities
@@ -29,7 +30,7 @@ export async function createMcpClientWithX402(options: {
   // Set up wallet client for x402 payments
   const account = privateKeyToAccount(privateKey);
   const chain = network === "base" ? base : baseSepolia;
-  
+
   const walletClient = createWalletClient({
     account,
     chain,
@@ -41,7 +42,48 @@ export async function createMcpClientWithX402(options: {
   console.log("Network:", network);
 
   // Create x402-enabled fetch
-  const fetchWithPayment = wrapFetchWithPayment(fetch, walletClient);
+  const x402Fetch = wrapFetchWithPayment(fetch, walletClient);
+
+  // Create a wrapper that ensures proper headers for MCP
+  const fetchWithPayment = async (input: RequestInfo | URL, init?: RequestInit) => {
+    // Convert headers to a plain object to ensure they survive the x402 retry
+    const headers = new Headers(init?.headers);
+
+    // StreamableHTTP requires both application/json and text/event-stream
+    const acceptHeader = headers.get('Accept') || '';
+    if (!acceptHeader.includes('text/event-stream')) {
+      headers.set('Accept', 'application/json, text/event-stream');
+    }
+
+    // Convert Headers to plain object for x402-fetch compatibility
+    const headersObject: Record<string, string> = {};
+    headers.forEach((value, key) => {
+      headersObject[key] = value;
+    });
+
+    const response = await x402Fetch(input, {
+      ...init,
+      headers: headersObject,
+    });
+
+    // Log payment information if available
+    const paymentResponse = response.headers.get('X-PAYMENT-RESPONSE');
+    if (paymentResponse) {
+      console.log('\n💰 Payment made:');
+      console.log('   Response:', paymentResponse);
+      try {
+        const decoded = JSON.parse(atob(paymentResponse));
+        console.log('   Decoded:', decoded);
+        if (decoded.txHash) {
+          console.log('   Transaction Hash:', decoded.txHash);
+        }
+      } catch (e) {
+        // Failed to decode, just log raw value
+      }
+    }
+
+    return response;
+  };
 
   // Create MCP client with standard SDK
   const client = new Client(
@@ -58,7 +100,7 @@ export async function createMcpClientWithX402(options: {
   const transport = new StreamableHTTPClientTransport(
     new URL(serverUrl),
     {
-      fetch: fetchWithPayment as any, // x402 fetch is compatible with FetchLike
+      fetch: fetchWithPayment as any,
     }
   );
 

@@ -77,7 +77,7 @@ pnpm build
 The server can be configured via environment variables:
 - `PORT` - HTTP server port (default: 3000)
 - `MODE` - Server mode: `http` or `mcp` (default: http)
-- `WALLET_ADDRESS` - Your wallet address to receive payments
+- `RECEIVER_WALLET_ADDRESS` - Your wallet address to receive payments
 - `PAYMENT_NETWORK` - Payment network: `base-sepolia` (testnet) or `base` (mainnet)
 - `FACILITATOR_URL` - X402 facilitator URL
 
@@ -119,16 +119,17 @@ The client uses the standard MCP SDK with a custom fetch implementation provided
 
 1. Generate a new wallet (or use an existing one):
    ```bash
-   pnpm generate-wallet > .env
+   pnpm generate-wallet
    ```
-   This will generate a new private key using viem and create a `.env` file with all necessary configuration.
+   This will generate a new private key using viem and output the configuration to stdout. Add these values to your `.env` file.
    
 2. Fund your wallet with USDC on Base Sepolia (testnet) or Base (mainnet)
    - For testnet USDC, use a faucet or bridge from Ethereum Sepolia
 
-3. The `.env` file will be automatically configured with:
-   - `PRIVATE_KEY` - Your wallet's private key
-   - `WALLET_ADDRESS` - Your wallet's address (for receiving payments as a seller)
+3. Configure your `.env` file with:
+   - `SENDER_PRIVATE_KEY` - Your wallet's private key (for sending payments as a client)
+   - `SENDER_WALLET_ADDRESS` - Your wallet's address (for sending payments)
+   - `RECEIVER_WALLET_ADDRESS` - Your wallet address to receive payments (as a server)
    - `PAYMENT_NETWORK` - Default: base-sepolia
    - `FACILITATOR_URL` - Default: https://x402.org/facilitator
    - `MCP_SERVER_URL` - Default: http://localhost:3000/mcp

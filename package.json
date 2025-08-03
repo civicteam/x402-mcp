@@ -9,7 +9,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "example": "tsx src/client/example.ts",
-    "generate-wallet": "tsx scripts/generateWallet.ts"
+    "generate-wallet": "tsx scripts/generateWallet.ts",
   },
   "dependencies": {
     "@ecdysis/x402-fetch": "^0.3.3-patched2",
@@ -18,7 +18,7 @@
     "dotenv": "^16.4.5",
     "express": "^5.1.0",
     "viem": "^2.33.2",
-    "x402-express": "^0.4.2",
+    "x402": "^0.4.3",
     "zod": "^3.25.64"
   },
   "devDependencies": {

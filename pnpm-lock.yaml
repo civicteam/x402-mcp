@@ -8,12 +8,18 @@ importers:
 
   .:
     dependencies:
+      '@civic/hook-common':
+        specifier: ^0.2.3
+        version: 0.2.3(typescript@5.8.3)
       '@ecdysis/x402-fetch':
         specifier: ^0.3.3-patched2
         version: 0.3.3-patched2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
       '@modelcontextprotocol/sdk':
         specifier: ^1.17.0
         version: 1.17.0
+      axios:
+        specifier: ^1.11.0
+        version: 1.11.0
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -26,6 +32,12 @@ importers:
       viem:
         specifier: ^2.33.2
         version: 2.33.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76)
+      x402:
+        specifier: ^0.4.3
+        version: 0.4.3(@tanstack/query-core@5.83.1)(@tanstack/react-query@5.83.1(react@18.3.1))(bufferutil@4.0.9)(react@18.3.1)(typescript@5.8.3)(utf-8-validate@5.0.10)
+      x402-axios:
+        specifier: ^0.4.2
+        version: 0.4.2(@tanstack/query-core@5.83.1)(@tanstack/react-query@5.83.1(react@18.3.1))(bufferutil@4.0.9)(react@18.3.1)(typescript@5.8.3)(utf-8-validate@5.0.10)
       x402-express:
         specifier: ^0.4.2
         version: 0.4.2(@tanstack/query-core@5.83.1)(@tanstack/react-query@5.83.1(react@18.3.1))(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(react@18.3.1)(typescript@5.8.3)(utf-8-validate@5.0.10)
@@ -65,6 +77,9 @@ packages:
     peerDependenciesMeta:
       wagmi:
         optional: true
+
+  '@civic/hook-common@0.2.3':
+    resolution: {integrity: sha512-hmPINYeFCUTYSVCP74jsU81PWNBFlIMyh+2tMeJGFwUrDZmgTzqrHS+WmswgPBZvbJqlr0wcJ+mS88YtL+nLjw==}
 
   '@coinbase/cdp-sdk@1.30.0':
     resolution: {integrity: sha512-uVByA4XLLzs2b1SES51izsapj3wt+lOAJI0xbE4MNb4D3tzV5RJ2+O7+SDJaQXU4jjn9KsdVvvDSpSU+nM81Zg==}
@@ -544,6 +559,17 @@ packages:
     peerDependencies:
       react: ^18 || ^19
 
+  '@trpc/client@11.4.3':
+    resolution: {integrity: sha512-i2suttUCfColktXT8bqex5kHW5jpT15nwUh0hGSDiW1keN621kSUQKcLJ095blqQAUgB+lsmgSqSMmB4L9shQQ==}
+    peerDependencies:
+      '@trpc/server': 11.4.3
+      typescript: '>=5.7.2'
+
+  '@trpc/server@11.4.3':
+    resolution: {integrity: sha512-wnWq3wiLlMOlYkaIZz+qbuYA5udPTLS4GVVRyFkr6aT83xpdCHyVtURT+u4hSoIrOXQM9OPCNXSXsAujWZDdaw==}
+    peerDependencies:
+      typescript: '>=5.7.2'
+
   '@types/body-parser@1.19.6':
     resolution: {integrity: sha512-HLFeCYgz89uk22N5Qg3dvGvsv46B8GLvKKo1zKG4NybA8U2DiEO3w9lqGg29t/tfLRJpJ6iQxnVw4OnB7MoM9g==}
 
@@ -921,6 +947,10 @@ packages:
   cookie@0.7.2:
     resolution: {integrity: sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w==}
     engines: {node: '>= 0.6'}
+
+  copy-anything@3.0.5:
+    resolution: {integrity: sha512-yCEafptTtb4bk7GLEQoM8KVJpxAfdBJYaXyzQEgQQQgYrZiDp8SJmGKlYza6CYjEDNstAdNdKA3UuoULlEbS6w==}
+    engines: {node: '>=12.13'}
 
   core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
@@ -1343,6 +1373,10 @@ packages:
   is-typed-array@1.1.15:
     resolution: {integrity: sha512-p3EcsicXjit7SaskXHs1hA91QxgTw46Fv6EFKKGS5DRFLD8yKnohjF3hxoju94b/OcMZoQukzpPpBE9uLVKzgQ==}
     engines: {node: '>= 0.4'}
+
+  is-what@4.1.16:
+    resolution: {integrity: sha512-ZhMwEosbFJkA0YhFnNDgTM4ZxDRsS6HqTo7qsZM08fehyRYIYa0yHu5R6mgo1n/8MgaPBXiPimPD77baVFYg+A==}
+    engines: {node: '>=12.13'}
 
   isarray@1.0.0:
     resolution: {integrity: sha512-VLghIWNM6ELQzo7zwmcg0NmTVyWKYjvIeM83yjp0wRDTmUnrM678fQbcKBo6n2CJEF0szoG//ytg+TKla89ALQ==}
@@ -1868,6 +1902,10 @@ packages:
     resolution: {integrity: sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==}
     engines: {node: '>=8'}
 
+  superjson@2.2.2:
+    resolution: {integrity: sha512-5JRxVqC8I8NuOUjzBbvVJAKNM8qoVuH0O77h4WInc/qC2q5IreqKxYwgkga3PfA22OayK2ikceb/B26dztPl+Q==}
+    engines: {node: '>=16'}
+
   superstruct@1.0.4:
     resolution: {integrity: sha512-7JpaAoX2NGyoFlI9NBh66BQXGONc+uE+MRS5i2iOBKuS4e+ccgMDjATgZldkah+33DakBxDHiss9kvUcGAO8UQ==}
     engines: {node: '>=14.0.0'}
@@ -2162,11 +2200,14 @@ packages:
       utf-8-validate:
         optional: true
 
+  x402-axios@0.4.2:
+    resolution: {integrity: sha512-6aaVrSq/w43xtOz7KCI5SRcd+8EEj6q3ZEALJbcjlM6oAi30wTiZOCrH6UEMpLYSyEGMt1Jl25AL3tuwJXTumA==}
+
   x402-express@0.4.2:
     resolution: {integrity: sha512-a4lrhElN7Q013fYoTRmJ52yQmgWO7CFNbVlGemo/YfDWutATt074cK9IUf7qpL5RUef1HNhHN/oBrGakXSO06w==}
 
-  x402@0.4.2:
-    resolution: {integrity: sha512-MLgO4h+DYkfDBg5rKhnOOIePaSNSbjjzrmrjTQM/vXqImjlQukEZ0Z25EleoTFCW4RrfUImU0nF1W7kgpMftFQ==}
+  x402@0.4.3:
+    resolution: {integrity: sha512-GbIgX2EZYAOZX1ZrEYIVXtjDKLtNuwp7lUlM3dCJAF5TqELP+bDrLy3UsypzNcJoHPVvNa+jB4BPZ83/W2nZDA==}
 
   xmlhttprequest-ssl@2.1.2:
     resolution: {integrity: sha512-TEU+nJVUUnA4CYJFLvK5X9AOeH4KvDvhIfm0vV1GaQRtchnG0hgK5p8hw/xjv8cunWYCsiPCSDzObPyhEwq3KQ==}
@@ -2261,6 +2302,17 @@ snapshots:
       - use-sync-external-store
       - utf-8-validate
       - zod
+
+  '@civic/hook-common@0.2.3(typescript@5.8.3)':
+    dependencies:
+      '@modelcontextprotocol/sdk': 1.17.0
+      '@trpc/client': 11.4.3(@trpc/server@11.4.3(typescript@5.8.3))(typescript@5.8.3)
+      '@trpc/server': 11.4.3(typescript@5.8.3)
+      superjson: 2.2.2
+      zod: 3.25.76
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
 
   '@coinbase/cdp-sdk@1.30.0(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.8.3)(utf-8-validate@5.0.10)':
     dependencies:
@@ -3107,6 +3159,15 @@ snapshots:
     dependencies:
       '@tanstack/query-core': 5.83.1
       react: 18.3.1
+
+  '@trpc/client@11.4.3(@trpc/server@11.4.3(typescript@5.8.3))(typescript@5.8.3)':
+    dependencies:
+      '@trpc/server': 11.4.3(typescript@5.8.3)
+      typescript: 5.8.3
+
+  '@trpc/server@11.4.3(typescript@5.8.3)':
+    dependencies:
+      typescript: 5.8.3
 
   '@types/body-parser@1.19.6':
     dependencies:
@@ -3980,6 +4041,10 @@ snapshots:
 
   cookie@0.7.2: {}
 
+  copy-anything@3.0.5:
+    dependencies:
+      is-what: 4.1.16
+
   core-util-is@1.0.3: {}
 
   cors@2.8.5:
@@ -4477,6 +4542,8 @@ snapshots:
   is-typed-array@1.1.15:
     dependencies:
       which-typed-array: 1.1.19
+
+  is-what@4.1.16: {}
 
   isarray@1.0.0: {}
 
@@ -5062,6 +5129,10 @@ snapshots:
     dependencies:
       ansi-regex: 5.0.1
 
+  superjson@2.2.2:
+    dependencies:
+      copy-anything: 3.0.5
+
   superstruct@1.0.4: {}
 
   superstruct@2.0.2: {}
@@ -5326,12 +5397,49 @@ snapshots:
       bufferutil: 4.0.9
       utf-8-validate: 5.0.10
 
+  x402-axios@0.4.2(@tanstack/query-core@5.83.1)(@tanstack/react-query@5.83.1(react@18.3.1))(bufferutil@4.0.9)(react@18.3.1)(typescript@5.8.3)(utf-8-validate@5.0.10):
+    dependencies:
+      axios: 1.11.0
+      viem: 2.33.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76)
+      x402: 0.4.3(@tanstack/query-core@5.83.1)(@tanstack/react-query@5.83.1(react@18.3.1))(bufferutil@4.0.9)(react@18.3.1)(typescript@5.8.3)(utf-8-validate@5.0.10)
+      zod: 3.25.76
+    transitivePeerDependencies:
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@deno/kv'
+      - '@netlify/blobs'
+      - '@planetscale/database'
+      - '@react-native-async-storage/async-storage'
+      - '@tanstack/query-core'
+      - '@tanstack/react-query'
+      - '@types/react'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/kv'
+      - aws4fetch
+      - bufferutil
+      - db0
+      - debug
+      - encoding
+      - immer
+      - ioredis
+      - react
+      - supports-color
+      - typescript
+      - uploadthing
+      - utf-8-validate
+
   x402-express@0.4.2(@tanstack/query-core@5.83.1)(@tanstack/react-query@5.83.1(react@18.3.1))(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(react@18.3.1)(typescript@5.8.3)(utf-8-validate@5.0.10):
     dependencies:
       '@coinbase/cdp-sdk': 1.30.0(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.8.3)(utf-8-validate@5.0.10)
       express: 4.21.2
       viem: 2.33.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76)
-      x402: 0.4.2(@tanstack/query-core@5.83.1)(@tanstack/react-query@5.83.1(react@18.3.1))(bufferutil@4.0.9)(react@18.3.1)(typescript@5.8.3)(utf-8-validate@5.0.10)
+      x402: 0.4.3(@tanstack/query-core@5.83.1)(@tanstack/react-query@5.83.1(react@18.3.1))(bufferutil@4.0.9)(react@18.3.1)(typescript@5.8.3)(utf-8-validate@5.0.10)
       zod: 3.25.76
     transitivePeerDependencies:
       - '@azure/app-configuration'
@@ -5365,7 +5473,7 @@ snapshots:
       - uploadthing
       - utf-8-validate
 
-  x402@0.4.2(@tanstack/query-core@5.83.1)(@tanstack/react-query@5.83.1(react@18.3.1))(bufferutil@4.0.9)(react@18.3.1)(typescript@5.8.3)(utf-8-validate@5.0.10):
+  x402@0.4.3(@tanstack/query-core@5.83.1)(@tanstack/react-query@5.83.1(react@18.3.1))(bufferutil@4.0.9)(react@18.3.1)(typescript@5.8.3)(utf-8-validate@5.0.10):
     dependencies:
       viem: 2.33.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76)
       wagmi: 2.16.0(@tanstack/query-core@5.83.1)(@tanstack/react-query@5.83.1(react@18.3.1))(bufferutil@4.0.9)(react@18.3.1)(typescript@5.8.3)(utf-8-validate@5.0.10)(viem@2.33.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)

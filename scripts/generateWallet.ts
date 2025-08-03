@@ -7,11 +7,11 @@ async function generateWallet() {
   const account = privateKeyToAccount(privateKey);
 
   // Output to stdout
-  console.log(`PRIVATE_KEY=${privateKey}
-WALLET_ADDRESS=${account.address}
+  console.log(`SENDER_PRIVATE_KEY=${privateKey}
+SENDER_WALLET_ADDRESS=${account.address}
 PAYMENT_NETWORK=base-sepolia
 FACILITATOR_URL=https://x402.org/facilitator
-MCP_SERVER_URL=http://localhost:3000/mcp`);
+MCP_SERVER_URL=http://localhost:3022/mcp`);
 }
 
 generateWallet().catch(console.error);
