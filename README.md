@@ -70,8 +70,6 @@ This library integrates X402 payments into MCP by:
 1. **Server-side**: Wrapping the MCP `StreamableHTTPServerTransport` to intercept tool calls and require payments
 2. **Client-side**: Using a custom fetch implementation that automatically handles 402 responses and payment flows
 
-**Important caveat**: The integration currently disables SSE streaming by setting `enableJsonResponse: true` in the transport configuration. This is because X402 payment verification happens at the HTTP request level, before the SSE stream is established. See `@modelcontextprotocol/sdk/server/streamableHttp.d.ts` line 53 for details.
-
 ## Installation
 
 ```bash
@@ -144,6 +142,32 @@ const client = new Client(
 );
 await client.connect(transport);
 ```
+
+### Streaming Limitation
+
+**Important caveat**: The integration currently disables SSE (Server-Sent Events) streaming by setting `enableJsonResponse: true` in the transport configuration. Here's why:
+
+1. **X402 Protocol Requirements**:
+   - Payment verification happens when the request arrives (via `X-PAYMENT` header)
+   - Payment settlement confirmation must be sent back via `X-PAYMENT-RESPONSE` header
+   - This header contains critical information like the transaction hash
+
+2. **SSE Timing Conflict**:
+   - SSE streams send HTTP headers immediately when the connection opens
+   - Payment settlement happens *after* the MCP tool executes
+   - By then, headers are already sent and cannot be modified
+   - The `X-PAYMENT-RESPONSE` header cannot be added retroactively
+
+3. **Current Solution**:
+   - Using JSON responses (`enableJsonResponse: true`) instead of SSE
+   - This allows the full request to be processed before sending headers
+   - Settlement can happen and headers can be added before the response is sent
+   - Trade-off: No real-time streaming, but maintains X402 protocol compliance
+
+4. **Alternative Approaches**:
+   - Supporting SSE would require modifying the X402 protocol to send settlement info in the message body
+   - This would be a significant departure from the HTTP header-based design
+   - For now, JSON responses provide the best compatibility between both protocols
 
 ## License
 

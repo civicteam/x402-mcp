@@ -412,6 +412,6 @@ export function makePaymentAwareServerTransport(
     toolPricing,
     facilitator: options?.facilitator,
     sessionIdGenerator: options?.sessionIdGenerator,
-    enableJsonResponse: options?.enableJsonResponse ?? true
+    enableJsonResponse: options?.enableJsonResponse
   });
 }
