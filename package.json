@@ -9,7 +9,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "example": "tsx src/client/example.ts",
-    "generate-wallet": "tsx scripts/generateWallet.ts",
+    "generate-wallet": "tsx scripts/generateWallet.ts"
   },
   "dependencies": {
     "@ecdysis/x402-fetch": "^0.3.3-patched2",

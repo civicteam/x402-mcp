@@ -1,15 +1,14 @@
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import {CallToolRequest, MessageExtraInfo, RequestId} from "@modelcontextprotocol/sdk/types.js";
+import {AuthInfo} from "@modelcontextprotocol/sdk/server/auth/types.js";
 import { IncomingMessage, ServerResponse } from "http";
 import { exact } from "x402/schemes";
 import { useFacilitator } from "x402/verify";
-import { 
-  computeRoutePatterns, 
-  findMatchingPaymentRequirements, 
-  findMatchingRoute,
+import {
+  findMatchingPaymentRequirements,
   processPriceToAtomicAmount,
-  toJsonSafe
 } from "x402/shared";
-import { 
+import {
   JSONRPCMessage,
   JSONRPCRequest,
   JSONRPCResponse,
@@ -20,12 +19,12 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { getAddress } from "viem";
 import { Address } from "viem";
-import { settleResponseHeader } from "x402/types";
+import {FacilitatorConfig, PaymentPayload, PaymentRequirements, settleResponseHeader} from "x402/types";
+import {OutgoingHttpHeader, OutgoingHttpHeaders} from "node:http";
 
 interface X402TransportOptions {
   payTo: Address;
-  routes: any;
-  facilitator?: any;
+  facilitator?: FacilitatorConfig;
   sessionIdGenerator?: () => string;
   enableJsonResponse?: boolean;
   toolPricing?: Record<string, string>;
@@ -36,29 +35,49 @@ interface SettlementInfo {
   error?: string;
 }
 
+interface ToolCallParams {
+  name: string;
+  arguments?: CallToolRequest["params"]["arguments"];
+}
+
+function isToolCallParams(params: unknown): params is ToolCallParams {
+  return (
+    params !== null &&
+    typeof params === 'object' &&
+    'name' in params &&
+    typeof (params as { name: unknown }).name === 'string'
+  );
+}
+
+interface PaymentInfo {
+  payment: PaymentPayload; // TODO: Type this based on x402 payment structure
+  toolName?: string;
+  toolPrice?: string;
+  request?: JSONRPCRequest;
+  req?: IncomingMessage;
+}
+
 export class X402StreamableHTTPServerTransport {
   private transport: StreamableHTTPServerTransport;
   private payTo: Address;
-  private routes: any;
-  private facilitator?: any;
-  private routePatterns: any;
+  private facilitator?: FacilitatorConfig;
   private settlementMap: Map<string | number, SettlementInfo> = new Map();
-  private requestPaymentMap: Map<string | number, any> = new Map();
-  private pendingPayment: any = null;
+  private requestPaymentMap: Map<string | number, PaymentInfo> = new Map();
+  private pendingPayment: PaymentInfo | null = null;
   private toolPricing: Record<string, string>;
+  private currentResponse: ServerResponse | null = null;
+  private responsePaymentHeaders: Map<ServerResponse, string> = new Map();
 
   constructor(options: X402TransportOptions) {
     this.transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: options.sessionIdGenerator,
       enableJsonResponse: options.enableJsonResponse ?? true // Default to JSON responses
     });
-    
+
     this.payTo = options.payTo;
-    this.routes = options.routes;
     this.facilitator = options.facilitator;
-    this.routePatterns = computeRoutePatterns(this.routes);
     this.toolPricing = options.toolPricing || {};
-    
+
     console.log('🔧 [X402Transport] Created with payTo:', this.payTo);
     console.log('   Tool pricing:', this.toolPricing);
 
@@ -83,7 +102,9 @@ export class X402StreamableHTTPServerTransport {
     return this.transport.close();
   }
 
-  async send(message: JSONRPCMessage, options?: any) {
+  async send(message: JSONRPCMessage, options?: {
+    relatedRequestId?: RequestId;
+  }) {
     // Intercept responses to include settlement info
     if ((isJSONRPCResponse(message) || isJSONRPCError(message)) && message.id !== undefined) {
       const paymentInfo = this.requestPaymentMap.get(message.id);
@@ -110,11 +131,29 @@ export class X402StreamableHTTPServerTransport {
     return this.transport.send(message, options);
   }
 
-  async handleRequest(req: IncomingMessage & { auth?: any }, res: ServerResponse, parsedBody?: any): Promise<void> {
+  async handleRequest(req: IncomingMessage & { auth?: AuthInfo }, res: ServerResponse, parsedBody?: unknown): Promise<void> {
     console.log('\n📥 [X402Transport] Handling request');
     console.log('   Method:', req.method);
     console.log('   URL:', req.url);
-    
+
+    // Store the response object for later use
+    this.currentResponse = res;
+
+    // Intercept writeHead to inject payment header
+    const originalWriteHead = res.writeHead.bind(res);
+
+    res.writeHead = ((statusCode: number, headers?:  OutgoingHttpHeaders | OutgoingHttpHeader[] | undefined) => {
+      // Check if we have a payment response header for this response
+      const paymentHeader = this.responsePaymentHeaders.get(res);
+      if (paymentHeader && headers && !Array.isArray(headers)) {
+        headers['X-PAYMENT-RESPONSE'] = paymentHeader;
+        console.log('   💳 Added X-PAYMENT-RESPONSE header to response');
+        // Clean up after use
+        this.responsePaymentHeaders.delete(res);
+      }
+      return originalWriteHead.call(res, statusCode, headers);
+    }) as typeof res.writeHead;
+
     // Only intercept POST requests to the MCP endpoint
     if (req.method !== 'POST' || !parsedBody) {
       return this.transport.handleRequest(req, res, parsedBody);
@@ -122,10 +161,13 @@ export class X402StreamableHTTPServerTransport {
 
     // Check if this is a tool call that requires payment
     const messages = Array.isArray(parsedBody) ? parsedBody : [parsedBody];
-    const toolCall = messages.find((msg: any) => 
-      msg.method === 'tools/call' && 
-      msg.params?.name && 
-      this.toolPricing[msg.params.name]
+    const toolCall = messages.find((msg): msg is JSONRPCRequest & { params: ToolCallParams } =>
+      msg.method === 'tools/call' &&
+      msg.params &&
+      typeof msg.params === 'object' &&
+      'name' in msg.params &&
+      typeof msg.params.name === 'string' &&
+      this.toolPricing[msg.params.name] !== undefined
     );
 
     if (!toolCall) {
@@ -150,7 +192,7 @@ export class X402StreamableHTTPServerTransport {
     }
 
     // Decode and verify payment
-    let decodedPayment: any;
+    let decodedPayment: PaymentPayload;
     try {
       decodedPayment = exact.evm.decodePayment(paymentHeader);
       decodedPayment.x402Version = 1;
@@ -176,7 +218,7 @@ export class X402StreamableHTTPServerTransport {
     try {
       const { verify } = useFacilitator(this.facilitator);
       const paymentRequirements = this.getPaymentRequirementsForTool(toolName, toolPrice);
-      
+
       const selectedPaymentRequirements = findMatchingPaymentRequirements(
         paymentRequirements,
         decodedPayment
@@ -194,7 +236,7 @@ export class X402StreamableHTTPServerTransport {
 
       const verifyResponse = await verify(decodedPayment, selectedPaymentRequirements);
       console.log('   📡 Verify response:', verifyResponse);
-      
+
       if (!verifyResponse.isValid) {
         console.log('   ❌ Payment verification failed');
         res.writeHead(402).end(JSON.stringify({
@@ -206,11 +248,13 @@ export class X402StreamableHTTPServerTransport {
       }
 
       console.log('   ✅ Payment verified successfully');
-    } catch (error: any) {
-      console.log('   ❌ Verification error:', error.message);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(error)
+      console.log('   ❌ Verification error:', errorMessage);
       res.writeHead(402).end(JSON.stringify({
         x402Version: 1,
-        error: error.message,
+        error: errorMessage,
         accepts: this.getPaymentRequirementsForTool(toolName, toolPrice)
       }));
       return;
@@ -230,19 +274,19 @@ export class X402StreamableHTTPServerTransport {
 
   private setupMessageInterception() {
     const originalOnMessage = this.transport.onmessage;
-    
+
     // Intercept incoming messages
-    this.transport.onmessage = async (message: JSONRPCMessage, extra?: any) => {
+    this.transport.onmessage = async (message: JSONRPCMessage, extra?: MessageExtraInfo) => {
       console.log('   🔍 [X402Transport] Intercepting message:', message);
 
       // Check if this is a tool call that requires payment
-      if (isJSONRPCRequest(message) && message.method === 'tools/call' && message.params) {
-        const toolName = (message.params as any).name;
+      if (isJSONRPCRequest(message) && message.method === 'tools/call' && isToolCallParams(message.params)) {
+        const toolName = message.params.name;
         const toolPrice = this.toolPricing[toolName];
-        
+
         if (toolPrice && this.pendingPayment) {
           console.log(`   💰 Tool '${toolName}' has verified payment`);
-          
+
           // Track which request this payment is for
           if (message.id !== undefined) {
             this.requestPaymentMap.set(message.id, {
@@ -260,9 +304,9 @@ export class X402StreamableHTTPServerTransport {
     };
   }
 
-  private getPaymentRequirementsForTool(toolName: string, price: string): any[] {
+  private getPaymentRequirementsForTool(toolName: string, price: string): PaymentRequirements[] {
     const network = 'base-sepolia'; // TODO: make configurable
-    
+
     const atomicAmountForAsset = processPriceToAtomicAmount(price, network);
     if ("error" in atomicAmountForAsset) {
       throw new Error(atomicAmountForAsset.error);
@@ -286,9 +330,9 @@ export class X402StreamableHTTPServerTransport {
   }
 
 
-  private async settlePayment(paymentInfo: any, response: JSONRPCResponse | JSONRPCError): Promise<SettlementInfo> {
+  private async settlePayment(paymentInfo: PaymentInfo, response: JSONRPCResponse | JSONRPCError): Promise<SettlementInfo> {
     console.log('   💰 [X402Transport] Settling payment for response:', response.id);
-    
+
     // Only settle successful responses
     if (isJSONRPCError(response)) {
       console.log('   ❌ Skipping settlement for error response');
@@ -297,18 +341,24 @@ export class X402StreamableHTTPServerTransport {
 
     try {
       const { settle } = useFacilitator(this.facilitator);
-      
+
       // Get the original request to determine tool and pricing
       const originalRequest = paymentInfo.request;
-      const toolName = originalRequest?.params?.name;
-      const toolPrice = this.toolPricing[toolName];
-      
-      if (!toolPrice) {
+
+      // Type guard to check if this is a tool call with proper params
+      if (!isToolCallParams(originalRequest?.params)) {
+        throw new Error('Invalid request: missing tool name');
+      }
+
+      const toolName = originalRequest.params.name;
+
+      if (!this.toolPricing[toolName]) {
         throw new Error(`No pricing found for tool: ${toolName}`);
       }
-      
+
+      const toolPrice = this.toolPricing[toolName];
       const paymentRequirements = this.getPaymentRequirementsForTool(toolName, toolPrice);
-      
+
       const selectedPaymentRequirements = findMatchingPaymentRequirements(
         paymentRequirements,
         paymentInfo.payment
@@ -320,14 +370,22 @@ export class X402StreamableHTTPServerTransport {
 
       const settleResponse = await settle(paymentInfo.payment, selectedPaymentRequirements);
       console.log('   💳 Settle response:', settleResponse);
-      
+
+      // Store the payment response header for this response
+      if (this.currentResponse) {
+        const responseHeader = settleResponseHeader(settleResponse);
+        this.responsePaymentHeaders.set(this.currentResponse, responseHeader);
+        console.log('   📨 Payment response header prepared:', responseHeader);
+      }
+
       return {
         transactionHash: settleResponse.transaction
       };
-    } catch (error: any) {
-      console.log('   ❌ Settlement error:', error.message);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.log('   ❌ Settlement error:', errorMessage);
       return {
-        error: error.message
+        error: errorMessage
       };
     }
   }
