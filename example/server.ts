@@ -2,7 +2,7 @@ import express, { Express } from "express";
 import cors from "cors";
 import {McpServer} from "@modelcontextprotocol/sdk/server/mcp.js";
 import z from "zod";
-import { X402StreamableHTTPServerTransport } from "../src/x402Transport.js";
+import { makePaymentAwareServerTransport } from "../src/index.js";
 import { config } from "./config.js";
 import * as service from "./service.js";
 
@@ -65,11 +65,10 @@ async function createMcpServer() {
   )
 
   // Create X402 transport with payment configuration
-  const transport = new X402StreamableHTTPServerTransport({
-    payTo: config.payment.walletAddress,
-    toolPricing: config.payment.mcpPricing,
-    sessionIdGenerator: undefined
-  })
+  const transport = makePaymentAwareServerTransport(
+    config.payment.walletAddress,
+    config.payment.mcpPricing
+  )
 
   await mcpServer.connect(transport);
 

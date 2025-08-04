@@ -1,181 +1,150 @@
-# Todo MCP Server with X402 Payment Integration
+# X402 MCP Integration
 
-A Model Context Protocol (MCP) server for managing todos with Coinbase X402 payment integration. This server can run in two modes:
-- HTTP mode: Express server with REST API endpoints protected by X402 payment middleware
-- MCP mode: MCP server that can be used with LLM tools
+A server and client implementation for integrating X402 payment protocol with Model Context Protocol (MCP), enabling micropayments for MCP tool invocations.
 
-## Features
+## Quick Start
 
-- Create todos for specific users
-- List all todos for a user  
-- Delete todos by index
-- In-memory storage (resets on restart)
-- X402 payment integration for API monetization
-- Per-endpoint pricing configuration
+Enable micropayments for your MCP tools with X402 - get paid in USDC for every tool invocation.
+
+**Server**: Charge for tool usage
+```typescript
+const transport = makePaymentAwareServerTransport(
+  "0x123...",
+  { "my-tool": "$0.01" }
+);
+await mcpServer.connect(transport);
+```
+
+**Client**: Automatic payment handling
+```typescript
+const transport = makePaymentAwareClientTransport(
+  "http://localhost:3000/mcp",
+  walletClient
+);
+await mcpClient.connect(transport);
+```
+
+## What is X402?
+
+X402 is an open payment protocol developed by Coinbase that enables instant, automatic stablecoin payments directly over HTTP. It revives the HTTP 402 Payment Required status code to create a simple, programmatic payment flow:
+
+1. Client requests a resource from the server
+2. Server responds with 402 status and payment requirements
+3. Client constructs and sends a payment payload
+4. Server verifies and settles the payment via a facilitator
+5. Server returns the requested resource
+
+Key features:
+- Programmatic payments without accounts or complex authentication
+- Direct onchain payments with minimal setup
+- Machine-to-machine transaction support
+- Micropayments and usage-based billing
+
+Learn more: https://x402.org
+
+## What is MCP?
+
+Model Context Protocol (MCP) is an open protocol that standardizes how applications provide context to AI models. It enables:
+
+- Standardized server implementations exposing tools and resources
+- Client libraries for connecting to MCP servers  
+- Transport layers for communication between clients and servers
+- Tool invocation patterns for AI models to interact with external systems
+
+Learn more: https://modelcontextprotocol.io/overview
+
+## How MCP Works with Streaming HTTP
+
+MCP supports multiple transport mechanisms, including HTTP with Server-Sent Events (SSE) for streaming responses. The protocol uses JSON-RPC 2.0 for message exchange:
+
+1. Client sends JSON-RPC requests to the server
+2. Server can respond with:
+   - Single JSON response (when `enableJsonResponse: true`)
+   - SSE stream for real-time updates and multiple responses
+3. Messages flow bidirectionally using the chosen transport
+
+## Integrating MCP and X402
+
+This library integrates X402 payments into MCP by:
+
+1. **Server-side**: Wrapping the MCP `StreamableHTTPServerTransport` to intercept tool calls and require payments
+2. **Client-side**: Using a custom fetch implementation that automatically handles 402 responses and payment flows
+
+**Important caveat**: The integration currently disables SSE streaming by setting `enableJsonResponse: true` in the transport configuration. This is because X402 payment verification happens at the HTTP request level, before the SSE stream is established. See `@modelcontextprotocol/sdk/server/streamableHttp.d.ts` line 53 for details.
 
 ## Installation
 
 ```bash
-pnpm install
+npm install @civic/x402-mcp
 ```
 
 ## Usage
 
-### HTTP Mode (Default)
+### Server Setup
 
-Start the Express server:
+Create a payment-aware transport for your MCP server:
 
-```bash
-pnpm dev
-```
-
-The server will run on http://localhost:3000
-
-#### API Endpoints
-
-All endpoints are protected by X402 payment middleware:
-
-- `GET /todo/:username` - Get all todos for a user (Cost: $0.001)
-- `POST /todo` - Create a new todo (Cost: $0.002)
-  - Body: `{ "todo": "string" }`
-  - Requires `x-user-id` header
-- `DELETE /todo/:username/:index` - Delete a todo by index (Cost: $0.001)
-
-### MCP Mode
-
-To run as an MCP server:
-
-```bash
-MODE=mcp pnpm start
-```
-
-Or use the MCP inspector:
-
-```bash
-npx @modelcontextprotocol/inspector dist/index.js
-```
-
-#### MCP Tools
-
-The server exposes three MCP tools, each with payment requirements:
-- `list-todos` - List all todos for a user (Cost: $0.001)
-- `add-todo` - Create a new todo (Cost: $0.002)
-- `delete-todo` - Delete a todo by index (Cost: $0.001)
-
-MCP requests are handled through the `/mcp` endpoint with dynamic payment validation based on the tool being called.
-
-## Development
-
-Build TypeScript:
-
-```bash
-pnpm build
-```
-
-## Configuration
-
-The server can be configured via environment variables:
-- `PORT` - HTTP server port (default: 3000)
-- `MODE` - Server mode: `http` or `mcp` (default: http)
-- `RECEIVER_WALLET_ADDRESS` - Your wallet address to receive payments
-- `PAYMENT_NETWORK` - Payment network: `base-sepolia` (testnet) or `base` (mainnet)
-- `FACILITATOR_URL` - X402 facilitator URL
-
-Copy `.env.example` to `.env` and update with your values:
-
-```bash
-cp .env.example .env
-```
-
-### Payment Configuration
-
-The X402 payment middleware protects all todo endpoints with micropayments:
-- List todos: $0.001 per request
-- Create todo: $0.002 per request  
-- Delete todo: $0.001 per request
-
-For testnet:
-- Network: `base-sepolia`
-- Facilitator: `https://x402.org/facilitator`
-
-For mainnet:
-- Network: `base`
-- Facilitator: `https://facilitator.coinbase.com/facilitator`
-
-## X402 MCP Client
-
-This project includes a client implementation that can call the MCP server with automatic X402 payment handling.
-
-### How it Works
-
-The client uses the standard MCP SDK with a custom fetch implementation provided by `@ecdysis/x402-fetch`:
-
-1. Uses `StreamableHTTPClientTransport` with custom fetch option
-2. Wraps standard fetch with x402 payment capabilities
-3. Automatically handles 402 Payment Required responses
-4. Creates payment transactions and retries requests with proof of payment
-
-### Client Setup
-
-1. Generate a new wallet (or use an existing one):
-   ```bash
-   pnpm generate-wallet
-   ```
-   This will generate a new private key using viem and output the configuration to stdout. Add these values to your `.env` file.
-   
-2. Fund your wallet with USDC on Base Sepolia (testnet) or Base (mainnet)
-   - For testnet USDC, use a faucet or bridge from Ethereum Sepolia
-
-3. Configure your `.env` file with:
-   - `SENDER_PRIVATE_KEY` - Your wallet's private key (for sending payments as a client)
-   - `SENDER_WALLET_ADDRESS` - Your wallet's address (for sending payments)
-   - `RECEIVER_WALLET_ADDRESS` - Your wallet address to receive payments (as a server)
-   - `PAYMENT_NETWORK` - Default: base-sepolia
-   - `FACILITATOR_URL` - Default: https://x402.org/facilitator
-   - `MCP_SERVER_URL` - Default: http://localhost:3000/mcp
-
-### Running the Client Example
-
-```bash
-# Start the server first
-pnpm dev
-
-# In another terminal, run the client example
-pnpm example
-```
-
-The example will:
-1. Connect to the MCP server
-2. List available tools and their prices
-3. Call various tools (list-todos, add-todo, delete-todo)
-4. Automatically handle payments for each tool call
-
-### Client Implementation
-
-The client implementation (`src/client/mcpClientWithX402.ts`) provides a `createMcpClientWithX402` function that:
-- Creates a standard MCP SDK `Client` instance
-- Configures `StreamableHTTPClientTransport` with x402-enabled fetch
-- Returns a client that automatically handles payments
-
-Example usage:
 ```typescript
-import { createMcpClientWithX402 } from "./client/mcpClientWithX402.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { makePaymentAwareServerTransport } from "@civic/x402-mcp";
 
-const client = await createMcpClientWithX402({
-  serverUrl: "http://localhost:3000/mcp",
-  privateKey: "0x...",
-  network: "base-sepolia",
+// Create MCP server
+const server = new McpServer({
+  name: "my-server",
+  version: "1.0.0"
 });
 
-// Use the client normally - payments are handled automatically
-const result = await client.callTool({
-  name: "list-todos",
-  arguments: {},
-});
+// Define your tools
+server.tool(
+  "expensive-tool",
+  ...
+);
+
+// Create payment-aware transport
+const transport = makePaymentAwareServerTransport(
+  "0x...", // Your wallet address to receive payments
+  { 
+    "expensive-tool": "$0.010",
+    "another-tool": "$0.002"
+  }
+);
+
+// Connect with payment-aware transport
+await server.connect(transport);
 ```
 
-### Troubleshooting
+### Client Setup  
 
-1. **Insufficient Balance**: Ensure your wallet has enough USDC to cover the tool costs
-2. **Wrong Network**: Make sure your wallet is configured for the same network as the server (base-sepolia for testnet)
-3. **Private Key**: The private key must start with "0x" and be 64 hex characters long
+Create a payment-aware transport for your MCP client:
+
+```typescript
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { makePaymentAwareClientTransport } from "@civic/x402-mcp";
+import { createWalletClient, http } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { baseSepolia } from "viem/chains";
+
+// Set up your wallet client
+const walletClient = createWalletClient({
+  account: privateKeyToAccount("0x..."),
+  chain: baseSepolia,
+  transport: http()
+});
+
+// Create payment-aware transport
+const transport = makePaymentAwareClientTransport(
+  "http://localhost:3000/mcp",
+  walletClient
+);
+
+// Use with any MCP client
+const client = new Client(
+  { name: "my-client", version: "1.0.0" },
+  { capabilities: {} }
+);
+await client.connect(transport);
+```
+
+## License
+
+MIT

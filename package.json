@@ -1,31 +1,34 @@
 {
-  "name": "todo-mcp-server",
+  "name": "@civic/x402-mcp",
   "version": "1.0.0",
-  "description": "A simple MCP server for managing todos",
+  "description": "X402 payment integration for Model Context Protocol (MCP)",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
     "dev": "tsx watch example/server.ts",
     "build": "tsc",
     "start": "tsx example/server.ts",
-    "example": "tsx example/client/client.ts",
+    "example": "tsx example/client.ts",
     "generate-wallet": "tsx scripts/generateWallet.ts"
   },
+  "peerDependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.0"
+  },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.17.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^5.1.0",
     "viem": "^2.33.2",
     "x402": "^0.4.3",
-    "x402-fetch": "^0.4.2",
-    "zod": "^3.25.64"
+    "x402-fetch": "^0.4.2"
   },
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/node": "^22.10.5",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^5.1.0",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "zod": "^3.25.64"
   }
 }

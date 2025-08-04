@@ -19,7 +19,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { getAddress } from "viem";
 import { Address } from "viem";
-import {FacilitatorConfig, PaymentPayload, PaymentRequirements, settleResponseHeader} from "x402/types";
+import {FacilitatorConfig, PaymentPayload, PaymentRequirements, settleResponseHeader, Price} from "x402/types";
 import {OutgoingHttpHeader, OutgoingHttpHeaders} from "node:http";
 
 interface X402TransportOptions {
@@ -52,7 +52,7 @@ function isToolCallParams(params: unknown): params is ToolCallParams {
 interface PaymentInfo {
   payment: PaymentPayload; // TODO: Type this based on x402 payment structure
   toolName?: string;
-  toolPrice?: string;
+  toolPrice?: Price;
   request?: JSONRPCRequest;
   req?: IncomingMessage;
 }
@@ -64,7 +64,7 @@ export class X402StreamableHTTPServerTransport {
   private settlementMap: Map<string | number, SettlementInfo> = new Map();
   private requestPaymentMap: Map<string | number, PaymentInfo> = new Map();
   private pendingPayment: PaymentInfo | null = null;
-  private toolPricing: Record<string, string>;
+  private toolPricing: Record<string, Price>;
   private currentResponse: ServerResponse | null = null;
   private responsePaymentHeaders: Map<ServerResponse, string> = new Map();
 
@@ -304,7 +304,7 @@ export class X402StreamableHTTPServerTransport {
     };
   }
 
-  private getPaymentRequirementsForTool(toolName: string, price: string): PaymentRequirements[] {
+  private getPaymentRequirementsForTool(toolName: string, price: Price): PaymentRequirements[] {
     const network = 'base-sepolia'; // TODO: make configurable
 
     const atomicAmountForAsset = processPriceToAtomicAmount(price, network);
@@ -389,4 +389,29 @@ export class X402StreamableHTTPServerTransport {
       };
     }
   }
+}
+
+/**
+ * Creates a payment-aware MCP server transport that requires X402 payments for specified tools
+ * @param payTo - The wallet address to receive payments
+ * @param toolPricing - Mapping of tool names to prices (e.g., { "my-tool": "$0.01" })
+ * @param options - Optional configuration
+ * @returns X402StreamableHTTPServerTransport configured with payment requirements
+ */
+export function makePaymentAwareServerTransport(
+  payTo: Address | string,
+  toolPricing: Record<string, string>,
+  options?: {
+    facilitator?: FacilitatorConfig;
+    sessionIdGenerator?: () => string;
+    enableJsonResponse?: boolean;
+  }
+): X402StreamableHTTPServerTransport {
+  return new X402StreamableHTTPServerTransport({
+    payTo: getAddress(payTo),
+    toolPricing,
+    facilitator: options?.facilitator,
+    sessionIdGenerator: options?.sessionIdGenerator,
+    enableJsonResponse: options?.enableJsonResponse ?? true
+  });
 }

@@ -1,8 +1,11 @@
 #!/usr/bin/env node
-import { createMcpClientWithX402 } from "../../src/mcpClientWithX402.js";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { makePaymentAwareClientTransport } from "../src/index.js";
+import { createWalletClient, http } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { baseSepolia } from "viem/chains";
 import { config } from "dotenv";
 import path from "path";
-import { privateKeyToAccount } from "viem/accounts";
 
 // Load environment variables from .env file
 config({ path: path.join(process.cwd(), ".env") });
@@ -25,12 +28,31 @@ async function main() {
   try {
     console.log("=== MCP Client with X402 Payment Support ===\n");
 
-    // Create client with x402 payments
-    const client = await createMcpClientWithX402({
-      serverUrl: MCP_SERVER_URL,
-      privateKey: PRIVATE_KEY,
-      network: "base-sepolia",
+    // Create wallet client
+    const account = privateKeyToAccount(PRIVATE_KEY);
+    const walletClient = createWalletClient({
+      account,
+      chain: baseSepolia,
+      transport: http()
     });
+
+    console.log("💰 Wallet address:", account.address);
+    console.log("🌐 Network: Base Sepolia");
+
+    // Create payment-aware transport
+    const transport = makePaymentAwareClientTransport(
+      MCP_SERVER_URL,
+      walletClient
+    );
+
+    // Create MCP client
+    const client = new Client(
+      { name: "example-client", version: "1.0.0" },
+      { capabilities: {} }
+    );
+
+    // Connect with payment-aware transport
+    await client.connect(transport);
 
     console.log("✅ Connected to MCP server with x402 payment support!");
 
