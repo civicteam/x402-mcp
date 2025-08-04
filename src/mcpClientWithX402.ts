@@ -3,8 +3,8 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { baseSepolia, base } from "viem/chains";
-import { wrapFetchWithPayment } from "@ecdysis/x402-fetch";
-import {RequestInfo} from "@modelcontextprotocol/sdk/types.js";
+import { wrapFetchWithPayment } from "x402-fetch";
+import { convertHeaders } from "./util.js";
 
 /**
  * Creates an MCP client with x402 payment capabilities
@@ -42,28 +42,26 @@ export async function createMcpClientWithX402(options: {
   console.log("Network:", network);
 
   // Create x402-enabled fetch
-  const x402Fetch = wrapFetchWithPayment(fetch, walletClient);
+  const x402Fetch = wrapFetchWithPayment(fetch, walletClient as any);
 
   // Create a wrapper that ensures proper headers for MCP
-  const fetchWithPayment = async (input: RequestInfo | URL, init?: RequestInit) => {
-    // Convert headers to a plain object to ensure they survive the x402 retry
-    const headers = new Headers(init?.headers);
-
-    // StreamableHTTP requires both application/json and text/event-stream
-    const acceptHeader = headers.get('Accept') || '';
-    if (!acceptHeader.includes('text/event-stream')) {
-      headers.set('Accept', 'application/json, text/event-stream');
-    }
-
-    // Convert Headers to plain object for x402-fetch compatibility
-    const headersObject: Record<string, string> = {};
-    headers.forEach((value, key) => {
-      headersObject[key] = value;
-    });
+  const fetchWithPayment = async (input: RequestInfo, init: RequestInit) => {
+    // WORKAROUND: x402-fetch has a bug where it doesn't properly preserve Headers objects
+    // when retrying requests after 402 responses. The spread operator ...init.headers
+    // doesn't work with Headers objects - it spreads methods instead of key-value pairs.
+    // This causes critical headers like 'Accept: application/json, text/event-stream' to be lost.
+    // See: x402-fetch/src/index.ts line ~41: ...init.headers || {}
+    // This workaround converts Headers to a plain object to ensure headers are preserved.
+    // Fix submitted: https://github.com/coinbase/x402/pull/314
+    const headers = {
+      ...convertHeaders(init?.headers),
+      // MCP's StreamableHTTPClientTransport already sets this, but we ensure it's present
+      'Accept': 'application/json, text/event-stream'
+    };
 
     const response = await x402Fetch(input, {
       ...init,
-      headers: headersObject,
+      headers,
     });
 
     // Log payment information if available

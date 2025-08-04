@@ -30,14 +30,6 @@ export const config = {
       'list-todos': '$0.001',
       'add-todo': '$0.002',
       'delete-todo': '$0.001',
-    },
-    mcpRoutes: [{
-      path: '/mcp',
-      method: 'POST',
-      config: {
-        price: '$0.001', // Default price for all MCP tools
-        network: (process.env.PAYMENT_NETWORK || 'base-sepolia') as Network,
-      }
-    }],
+    }
   },
 };

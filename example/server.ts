@@ -1,10 +1,12 @@
+import express, { Express } from "express";
+import cors from "cors";
 import {McpServer} from "@modelcontextprotocol/sdk/server/mcp.js";
-import * as service from "./service.js";
 import z from "zod";
-import { X402StreamableHTTPServerTransport } from "./x402Transport.js";
+import { X402StreamableHTTPServerTransport } from "../src/x402Transport.js";
 import { config } from "./config.js";
+import * as service from "./service.js";
 
-export async function createMcpServer() {
+async function createMcpServer() {
   const mcpServer = new McpServer({
     name: "Todo app",
     version: "0.0.1",
@@ -65,7 +67,6 @@ export async function createMcpServer() {
   // Create X402 transport with payment configuration
   const transport = new X402StreamableHTTPServerTransport({
     payTo: config.payment.walletAddress,
-    routes: config.payment.mcpRoutes,
     toolPricing: config.payment.mcpPricing,
     sessionIdGenerator: undefined
   })
@@ -74,3 +75,28 @@ export async function createMcpServer() {
 
   return {transport, mcpServer};
 }
+
+const app: Express = express();
+
+app.use(express.json());
+app.use(cors());
+
+// Create singleton MCP server instance
+let mcpInstance: { transport: any; mcpServer: any } | null = null;
+
+async function getMcpInstance() {
+  if (!mcpInstance) {
+    console.log("🚀 Creating MCP server singleton instance");
+    mcpInstance = await createMcpServer();
+  }
+  return mcpInstance;
+}
+
+app.post("/mcp", async (req, res) => {
+  const { transport } = await getMcpInstance();
+
+  await transport.handleRequest(req, res, req.body);
+})
+
+const port = process.env.PORT ?? 3022;
+app.listen(port, () => console.error(`Todo MCP Server listening on port ${port}`));

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { createMcpClientWithX402 } from "./mcpClientWithX402.js";
+import { createMcpClientWithX402 } from "../../src/mcpClientWithX402.js";
 import { config } from "dotenv";
 import path from "path";
 import { privateKeyToAccount } from "viem/accounts";
