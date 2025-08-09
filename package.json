@@ -10,6 +10,9 @@
     "build": "tsc",
     "start": "tsx example/server.ts",
     "example": "tsx example/client.ts",
+    "example:client-proxy": "tsx example/proxy/client-proxy.ts",
+    "example:client-proxy:stdio": "tsx example/proxy/client-proxy.ts --stdio",
+    "example:server-proxy": "tsx example/proxy/server-proxy.ts",
     "generate-wallet": "tsx scripts/generateWallet.ts",
     "test": "vitest",
     "test:coverage": "vitest run --coverage"
@@ -18,6 +21,8 @@
     "@modelcontextprotocol/sdk": "^1.17.0"
   },
   "dependencies": {
+    "@civic/hook-common": "0.2.3",
+    "@civic/passthrough-mcp-server": "^0.7.0-beta4",
     "viem": "^2.33.2",
     "x402": "^0.4.3",
     "x402-fetch": "^0.4.2"

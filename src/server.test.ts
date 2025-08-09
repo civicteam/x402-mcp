@@ -71,8 +71,8 @@ function createMockFacilitator() {
 
 function createMockPaymentRequirements() {
   return {
-    scheme: 'exact',
-    network: 'base-sepolia',
+    scheme: 'exact' as const,
+    network: 'base-sepolia' as const,
     maxAmountRequired: '10000',
     resource: 'mcp://tool/test-tool',
     description: 'Payment for MCP tool: test-tool',

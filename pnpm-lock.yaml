@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@civic/hook-common':
+        specifier: 0.2.3
+        version: 0.2.3(typescript@5.9.2)
+      '@civic/passthrough-mcp-server':
+        specifier: ^0.7.0-beta4
+        version: 0.7.0-beta4(typescript@5.9.2)
       viem:
         specifier: ^2.33.2
         version: 2.33.2(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.25.76)
@@ -91,6 +97,14 @@ packages:
   '@bcoe/v8-coverage@1.0.2':
     resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
     engines: {node: '>=18'}
+
+  '@civic/hook-common@0.2.3':
+    resolution: {integrity: sha512-hmPINYeFCUTYSVCP74jsU81PWNBFlIMyh+2tMeJGFwUrDZmgTzqrHS+WmswgPBZvbJqlr0wcJ+mS88YtL+nLjw==}
+
+  '@civic/passthrough-mcp-server@0.7.0-beta4':
+    resolution: {integrity: sha512-hA4Aql7HfcunPeSRzCBi5XKZvfCtEZhM/fj1X4jT3g12I7ez2uTKKHjbDkp/xy6W27m6wOnotiA3pmdvc/QGnA==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
 
   '@coinbase/wallet-sdk@3.9.3':
     resolution: {integrity: sha512-N/A2DRIf0Y3PHc1XAMvbBUu4zisna6qAdqABMZwBMNEfWrXpAwx16pZGkYCLGE+Rvv1edbcB2LYDRnACNcmCiw==}
@@ -601,6 +615,17 @@ packages:
     peerDependencies:
       react: ^18 || ^19
 
+  '@trpc/client@11.4.4':
+    resolution: {integrity: sha512-86OZl+Y+Xlt9ITGlhCMImERcsWCOrVzpNuzg3XBlsDSmSs9NGsghKjeCpJQlE36XaG3aze+o9pRukiYYvBqxgQ==}
+    peerDependencies:
+      '@trpc/server': 11.4.4
+      typescript: '>=5.7.2'
+
+  '@trpc/server@11.4.4':
+    resolution: {integrity: sha512-VkJb2xnb4rCynuwlCvgPBh5aM+Dco6fBBIo6lWAdJJRYVwtyE5bxNZBgUvRRz/cFSEAy0vmzLxF7aABDJfK5Rg==}
+    peerDependencies:
+      typescript: '>=5.7.2'
+
   '@types/body-parser@1.19.6':
     resolution: {integrity: sha512-HLFeCYgz89uk22N5Qg3dvGvsv46B8GLvKKo1zKG4NybA8U2DiEO3w9lqGg29t/tfLRJpJ6iQxnVw4OnB7MoM9g==}
 
@@ -962,6 +987,10 @@ packages:
   cookie@0.7.2:
     resolution: {integrity: sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w==}
     engines: {node: '>= 0.6'}
+
+  copy-anything@3.0.5:
+    resolution: {integrity: sha512-yCEafptTtb4bk7GLEQoM8KVJpxAfdBJYaXyzQEgQQQgYrZiDp8SJmGKlYza6CYjEDNstAdNdKA3UuoULlEbS6w==}
+    engines: {node: '>=12.13'}
 
   core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
@@ -1342,6 +1371,10 @@ packages:
   is-typed-array@1.1.15:
     resolution: {integrity: sha512-p3EcsicXjit7SaskXHs1hA91QxgTw46Fv6EFKKGS5DRFLD8yKnohjF3hxoju94b/OcMZoQukzpPpBE9uLVKzgQ==}
     engines: {node: '>= 0.4'}
+
+  is-what@4.1.16:
+    resolution: {integrity: sha512-ZhMwEosbFJkA0YhFnNDgTM4ZxDRsS6HqTo7qsZM08fehyRYIYa0yHu5R6mgo1n/8MgaPBXiPimPD77baVFYg+A==}
+    engines: {node: '>=12.13'}
 
   isarray@1.0.0:
     resolution: {integrity: sha512-VLghIWNM6ELQzo7zwmcg0NmTVyWKYjvIeM83yjp0wRDTmUnrM678fQbcKBo6n2CJEF0szoG//ytg+TKla89ALQ==}
@@ -1892,6 +1925,10 @@ packages:
   strip-literal@3.0.0:
     resolution: {integrity: sha512-TcccoMhJOM3OebGhSBEmp3UZ2SfDMZUEBdRA/9ynfLi8yYajyWX3JiXArcJt4Umh4vISpspkQIY8ZZoCqjbviA==}
 
+  superjson@2.2.2:
+    resolution: {integrity: sha512-5JRxVqC8I8NuOUjzBbvVJAKNM8qoVuH0O77h4WInc/qC2q5IreqKxYwgkga3PfA22OayK2ikceb/B26dztPl+Q==}
+    engines: {node: '>=16'}
+
   superstruct@1.0.4:
     resolution: {integrity: sha512-7JpaAoX2NGyoFlI9NBh66BQXGONc+uE+MRS5i2iOBKuS4e+ccgMDjATgZldkah+33DakBxDHiss9kvUcGAO8UQ==}
     engines: {node: '>=14.0.0'}
@@ -2392,6 +2429,29 @@ snapshots:
       - zod
 
   '@bcoe/v8-coverage@1.0.2': {}
+
+  '@civic/hook-common@0.2.3(typescript@5.9.2)':
+    dependencies:
+      '@modelcontextprotocol/sdk': 1.17.1
+      '@trpc/client': 11.4.4(@trpc/server@11.4.4(typescript@5.9.2))(typescript@5.9.2)
+      '@trpc/server': 11.4.4(typescript@5.9.2)
+      superjson: 2.2.2
+      zod: 3.25.76
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
+
+  '@civic/passthrough-mcp-server@0.7.0-beta4(typescript@5.9.2)':
+    dependencies:
+      '@civic/hook-common': 0.2.3(typescript@5.9.2)
+      '@modelcontextprotocol/sdk': 1.17.1
+      content-type: 1.0.5
+      eventsource-parser: 3.0.3
+      raw-body: 3.0.0
+      zod: 3.25.76
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
 
   '@coinbase/wallet-sdk@3.9.3':
     dependencies:
@@ -3152,6 +3212,15 @@ snapshots:
     dependencies:
       '@tanstack/query-core': 5.83.1
       react: 18.3.1
+
+  '@trpc/client@11.4.4(@trpc/server@11.4.4(typescript@5.9.2))(typescript@5.9.2)':
+    dependencies:
+      '@trpc/server': 11.4.4(typescript@5.9.2)
+      typescript: 5.9.2
+
+  '@trpc/server@11.4.4(typescript@5.9.2)':
+    dependencies:
+      typescript: 5.9.2
 
   '@types/body-parser@1.19.6':
     dependencies:
@@ -4022,6 +4091,10 @@ snapshots:
 
   cookie@0.7.2: {}
 
+  copy-anything@3.0.5:
+    dependencies:
+      is-what: 4.1.16
+
   core-util-is@1.0.3: {}
 
   cors@2.8.5:
@@ -4450,6 +4523,8 @@ snapshots:
   is-typed-array@1.1.15:
     dependencies:
       which-typed-array: 1.1.19
+
+  is-what@4.1.16: {}
 
   isarray@1.0.0: {}
 
@@ -5047,6 +5122,10 @@ snapshots:
   strip-literal@3.0.0:
     dependencies:
       js-tokens: 9.0.1
+
+  superjson@2.2.2:
+    dependencies:
+      copy-anything: 3.0.5
 
   superstruct@1.0.4: {}
 
