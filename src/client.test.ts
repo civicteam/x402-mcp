@@ -4,6 +4,7 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import { wrapFetchWithPayment } from 'x402-fetch';
 import { convertHeaders } from './util.js';
 import { WalletClient } from 'viem';
+import {Wallet} from "x402/types";
 
 // Mock dependencies
 vi.mock('@modelcontextprotocol/sdk/client/streamableHttp.js', () => ({
@@ -22,21 +23,21 @@ vi.mock('./util.js', () => ({
 vi.stubGlobal('fetch', vi.fn());
 
 describe('makePaymentAwareClientTransport', () => {
-  let mockWalletClient: WalletClient;
+  let mockWallet: Wallet;
   let mockX402Fetch: any;
-  let consoleLogSpy: any;
+  let consoleErrorSpy: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    mockWalletClient = {
+
+    mockWallet = {
       account: { address: '0xabc' },
       chain: { id: 1 }
-    } as unknown as WalletClient;
-    
+    } as unknown as Wallet;
+
     mockX402Fetch = vi.fn();
     vi.mocked(wrapFetchWithPayment).mockReturnValue(mockX402Fetch);
-    
+
     vi.mocked(convertHeaders).mockImplementation((headers) => {
       if (!headers) return {};
       if (headers instanceof Headers) {
@@ -46,20 +47,20 @@ describe('makePaymentAwareClientTransport', () => {
       }
       return headers as Record<string, string>;
     });
-    
-    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    consoleLogSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
   });
 
   it('should create StreamableHTTPClientTransport with wrapped fetch', () => {
     const serverUrl = 'http://localhost:3000/mcp';
-    
-    makePaymentAwareClientTransport(serverUrl, mockWalletClient);
-    
-    expect(wrapFetchWithPayment).toHaveBeenCalledWith(fetch, mockWalletClient);
+
+    makePaymentAwareClientTransport(serverUrl, mockWallet);
+
+    expect(wrapFetchWithPayment).toHaveBeenCalledWith(fetch, mockWallet);
     expect(StreamableHTTPClientTransport).toHaveBeenCalledWith(
       expect.any(URL),
       expect.objectContaining({
@@ -70,9 +71,9 @@ describe('makePaymentAwareClientTransport', () => {
 
   it('should accept URL object as serverUrl', () => {
     const serverUrl = new URL('http://localhost:3000/mcp');
-    
-    makePaymentAwareClientTransport(serverUrl, mockWalletClient);
-    
+
+    makePaymentAwareClientTransport(serverUrl, mockWallet);
+
     expect(StreamableHTTPClientTransport).toHaveBeenCalledWith(
       serverUrl,
       expect.objectContaining({
@@ -83,10 +84,12 @@ describe('makePaymentAwareClientTransport', () => {
 
   describe('fetchWithPayment wrapper', () => {
     let fetchWithPayment: any;
+    let paymentCallback: any;
 
     beforeEach(() => {
-      makePaymentAwareClientTransport('http://localhost:3000/mcp', mockWalletClient);
-      
+      paymentCallback = vi.fn();
+      makePaymentAwareClientTransport('http://localhost:3000/mcp', mockWallet, paymentCallback);
+
       // Extract the fetch function passed to StreamableHTTPClientTransport
       const transportCall = vi.mocked(StreamableHTTPClientTransport).mock.calls[0];
       fetchWithPayment = transportCall[1]?.fetch;
@@ -95,23 +98,23 @@ describe('makePaymentAwareClientTransport', () => {
     it('should preserve headers and add Accept header', async () => {
       const mockResponse = new Response('test', { status: 200 });
       mockX402Fetch.mockResolvedValue(mockResponse);
-      
+
       const headers = new Headers({
         'Content-Type': 'application/json',
         'X-Custom': 'value'
       });
-      
+
       vi.mocked(convertHeaders).mockReturnValue({
         'Content-Type': 'application/json',
         'X-Custom': 'value'
       });
-      
+
       await fetchWithPayment('http://localhost:3000', {
         method: 'POST',
         headers,
         body: 'test'
       });
-      
+
       expect(convertHeaders).toHaveBeenCalledWith(headers);
       expect(mockX402Fetch).toHaveBeenCalledWith(
         'http://localhost:3000',
@@ -130,13 +133,13 @@ describe('makePaymentAwareClientTransport', () => {
     it('should handle requests without headers', async () => {
       const mockResponse = new Response('test', { status: 200 });
       mockX402Fetch.mockResolvedValue(mockResponse);
-      
+
       vi.mocked(convertHeaders).mockReturnValue({});
-      
+
       await fetchWithPayment('http://localhost:3000', {
         method: 'GET'
       });
-      
+
       expect(mockX402Fetch).toHaveBeenCalledWith(
         'http://localhost:3000',
         expect.objectContaining({
@@ -148,63 +151,78 @@ describe('makePaymentAwareClientTransport', () => {
       );
     });
 
-    it('should log payment response when present', async () => {
+    it('should call payment callback when payment response is present', async () => {
       const mockHeaders = new Headers({
         'X-PAYMENT-RESPONSE': 'eyJ0eEhhc2giOiAiMHgxMjMifQ=='
       });
-      const mockResponse = new Response('test', { 
+      const mockResponse = new Response('test', {
         status: 200,
         headers: mockHeaders
       });
       mockX402Fetch.mockResolvedValue(mockResponse);
-      
+
       await fetchWithPayment('http://localhost:3000', {});
-      
-      expect(consoleLogSpy).toHaveBeenCalledWith('\n💰 Payment made:');
-      expect(consoleLogSpy).toHaveBeenCalledWith('   Response:', 'eyJ0eEhhc2giOiAiMHgxMjMifQ==');
-      expect(consoleLogSpy).toHaveBeenCalledWith('   Decoded:', { txHash: '0x123' });
-      expect(consoleLogSpy).toHaveBeenCalledWith('   Transaction Hash:', '0x123');
+
+      expect(paymentCallback).toHaveBeenCalledWith('0x123');
     });
 
     it('should handle invalid payment response gracefully', async () => {
       const mockHeaders = new Headers({
         'X-PAYMENT-RESPONSE': 'not-valid-base64!!!'
       });
-      const mockResponse = new Response('test', { 
+      const mockResponse = new Response('test', {
         status: 200,
         headers: mockHeaders
       });
       mockX402Fetch.mockResolvedValue(mockResponse);
-      
+
       await fetchWithPayment('http://localhost:3000', {});
-      
-      expect(consoleLogSpy).toHaveBeenCalledWith('\n💰 Payment made:');
-      expect(consoleLogSpy).toHaveBeenCalledWith('   Response:', 'not-valid-base64!!!');
-      // Should not throw, just skip decoding
-      expect(consoleLogSpy).not.toHaveBeenCalledWith(expect.stringContaining('Decoded:'));
+
+      // Should log error but not call callback
+      expect(consoleErrorSpy).toHaveBeenCalledWith('❌ Failed to decode payment response:', expect.any(Error));
+      expect(paymentCallback).not.toHaveBeenCalled();
     });
 
     it('should handle response without payment header', async () => {
       const mockResponse = new Response('test', { status: 200 });
       mockX402Fetch.mockResolvedValue(mockResponse);
-      
+
       await fetchWithPayment('http://localhost:3000', {});
-      
-      expect(consoleLogSpy).not.toHaveBeenCalledWith(expect.stringContaining('Payment made'));
+
+      expect(paymentCallback).not.toHaveBeenCalled();
+    });
+
+    it('should handle payment response without callback provided', async () => {
+      // Re-create transport without callback
+      makePaymentAwareClientTransport('http://localhost:3000/mcp', mockWallet);
+      const transportCall = vi.mocked(StreamableHTTPClientTransport).mock.calls[1];
+      const fetchWithoutCallback = transportCall[1]?.fetch;
+
+      const mockHeaders = new Headers({
+        'X-PAYMENT-RESPONSE': 'eyJ0eEhhc2giOiAiMHgxMjMifQ=='
+      });
+      const mockResponse = new Response('test', {
+        status: 200,
+        headers: mockHeaders
+      });
+      mockX402Fetch.mockResolvedValue(mockResponse);
+
+      // Should not throw even without callback
+      await expect(fetchWithoutCallback?.('http://localhost:3000', {})).resolves.toBe(mockResponse);
     });
 
     it('should preserve existing Accept header if more specific', async () => {
       const mockResponse = new Response('test', { status: 200 });
       mockX402Fetch.mockResolvedValue(mockResponse);
-      
+
       vi.mocked(convertHeaders).mockReturnValue({
         'Accept': 'application/xml'
       });
-      
+
       await fetchWithPayment('http://localhost:3000', {
         headers: { 'Accept': 'application/xml' }
       });
-      
+
       expect(mockX402Fetch).toHaveBeenCalledWith(
         'http://localhost:3000',
         expect.objectContaining({

@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { makePaymentAwareClientTransport } from "../src/index.js";
-import { createWalletClient, http } from "viem";
+import {createWalletClient, http, publicActions} from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
 import { config } from "dotenv";
 import path from "path";
+import {Wallet} from "x402/types";
 
 // Load environment variables from .env file
 config({ path: path.join(process.cwd(), ".env") });
@@ -34,7 +35,7 @@ async function main() {
       account,
       chain: baseSepolia,
       transport: http()
-    });
+    }).extend(publicActions);
 
     console.log("💰 Wallet address:", account.address);
     console.log("🌐 Network: Base Sepolia");
@@ -42,7 +43,7 @@ async function main() {
     // Create payment-aware transport
     const transport = makePaymentAwareClientTransport(
       MCP_SERVER_URL,
-      walletClient
+      walletClient as Wallet
     );
 
     // Create MCP client

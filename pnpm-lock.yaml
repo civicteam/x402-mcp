@@ -12,14 +12,14 @@ importers:
         specifier: 0.2.3
         version: 0.2.3(typescript@5.9.2)
       '@civic/passthrough-mcp-server':
-        specifier: ^0.7.0-beta4
-        version: 0.7.0-beta4(typescript@5.9.2)
+        specifier: ^0.7.0-beta5
+        version: 0.7.0-beta5(typescript@5.9.2)
       viem:
         specifier: ^2.33.2
         version: 2.33.2(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.25.76)
       x402:
-        specifier: ^0.4.3
-        version: 0.4.3(@tanstack/query-core@5.83.1)(@tanstack/react-query@5.84.1(react@18.3.1))(bufferutil@4.0.9)(react@18.3.1)(typescript@5.9.2)(utf-8-validate@5.0.10)
+        specifier: ^0.5.0
+        version: 0.5.0(@tanstack/query-core@5.83.1)(@tanstack/react-query@5.84.1(react@18.3.1))(bufferutil@4.0.9)(react@18.3.1)(typescript@5.9.2)(utf-8-validate@5.0.10)
       x402-fetch:
         specifier: ^0.4.2
         version: 0.4.2(@tanstack/query-core@5.83.1)(@tanstack/react-query@5.84.1(react@18.3.1))(bufferutil@4.0.9)(react@18.3.1)(typescript@5.9.2)(utf-8-validate@5.0.10)
@@ -101,8 +101,8 @@ packages:
   '@civic/hook-common@0.2.3':
     resolution: {integrity: sha512-hmPINYeFCUTYSVCP74jsU81PWNBFlIMyh+2tMeJGFwUrDZmgTzqrHS+WmswgPBZvbJqlr0wcJ+mS88YtL+nLjw==}
 
-  '@civic/passthrough-mcp-server@0.7.0-beta4':
-    resolution: {integrity: sha512-hA4Aql7HfcunPeSRzCBi5XKZvfCtEZhM/fj1X4jT3g12I7ez2uTKKHjbDkp/xy6W27m6wOnotiA3pmdvc/QGnA==}
+  '@civic/passthrough-mcp-server@0.7.0-beta5':
+    resolution: {integrity: sha512-4we1aFh2XBLygtZRx71Nj3Rm/3c4i0kWvvZeVmc8w9tnPK3lyXOd1dGR4kziZsNH01989JzS1b+hA/f5KrRtgw==}
     engines: {node: '>=18.0.0'}
     hasBin: true
 
@@ -2318,6 +2318,9 @@ packages:
   x402@0.4.3:
     resolution: {integrity: sha512-GbIgX2EZYAOZX1ZrEYIVXtjDKLtNuwp7lUlM3dCJAF5TqELP+bDrLy3UsypzNcJoHPVvNa+jB4BPZ83/W2nZDA==}
 
+  x402@0.5.0:
+    resolution: {integrity: sha512-0JZiNyUxh2lfmCeBpV5jmJH3zA5WmqZI5Epe3KoWPq8Jmy1NjtcncWh5s7lS1kRQxdGyQ5k25Mb05RtukA0E7w==}
+
   xmlhttprequest-ssl@2.1.2:
     resolution: {integrity: sha512-TEU+nJVUUnA4CYJFLvK5X9AOeH4KvDvhIfm0vV1GaQRtchnG0hgK5p8hw/xjv8cunWYCsiPCSDzObPyhEwq3KQ==}
     engines: {node: '>=0.4.0'}
@@ -2441,7 +2444,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@civic/passthrough-mcp-server@0.7.0-beta4(typescript@5.9.2)':
+  '@civic/passthrough-mcp-server@0.7.0-beta5(typescript@5.9.2)':
     dependencies:
       '@civic/hook-common': 0.2.3(typescript@5.9.2)
       '@modelcontextprotocol/sdk': 1.17.1
@@ -5529,6 +5532,41 @@ snapshots:
       - utf-8-validate
 
   x402@0.4.3(@tanstack/query-core@5.83.1)(@tanstack/react-query@5.84.1(react@18.3.1))(bufferutil@4.0.9)(react@18.3.1)(typescript@5.9.2)(utf-8-validate@5.0.10):
+    dependencies:
+      viem: 2.33.2(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      wagmi: 2.16.1(@tanstack/query-core@5.83.1)(@tanstack/react-query@5.84.1(react@18.3.1))(bufferutil@4.0.9)(react@18.3.1)(typescript@5.9.2)(utf-8-validate@5.0.10)(viem@2.33.2(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+      zod: 3.25.76
+    transitivePeerDependencies:
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@deno/kv'
+      - '@netlify/blobs'
+      - '@planetscale/database'
+      - '@react-native-async-storage/async-storage'
+      - '@tanstack/query-core'
+      - '@tanstack/react-query'
+      - '@types/react'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/kv'
+      - aws4fetch
+      - bufferutil
+      - db0
+      - encoding
+      - immer
+      - ioredis
+      - react
+      - supports-color
+      - typescript
+      - uploadthing
+      - utf-8-validate
+
+  x402@0.5.0(@tanstack/query-core@5.83.1)(@tanstack/react-query@5.84.1(react@18.3.1))(bufferutil@4.0.9)(react@18.3.1)(typescript@5.9.2)(utf-8-validate@5.0.10):
     dependencies:
       viem: 2.33.2(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.25.76)
       wagmi: 2.16.1(@tanstack/query-core@5.83.1)(@tanstack/react-query@5.84.1(react@18.3.1))(bufferutil@4.0.9)(react@18.3.1)(typescript@5.9.2)(utf-8-validate@5.0.10)(viem@2.33.2(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)

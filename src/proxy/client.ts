@@ -7,6 +7,7 @@ import {
 } from "@civic/passthrough-mcp-server";
 import { makePaymentAwareClientTransport } from "../client.js";
 import type { WalletClient } from "viem";
+import {Wallet} from "x402/types";
 
 /**
  * Creates a client-side proxy that handles x402 payments on behalf of MCP clients
@@ -21,7 +22,7 @@ import type { WalletClient } from "viem";
  */
 export async function createClientProxy(params: {
   targetUrl: string,
-  walletClient: WalletClient,
+  wallet: Wallet,
 } & ({
   mode: 'stdio',
 } | {
@@ -31,7 +32,7 @@ export async function createClientProxy(params: {
   // Create the payment-aware transport for the target
   const paymentAwareTransport = makePaymentAwareClientTransport(
     params.targetUrl,
-    params.walletClient
+    params.wallet
   );
 
   if (params.mode === 'stdio') {

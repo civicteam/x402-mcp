@@ -40,6 +40,23 @@ pnpm example:client-proxy:stdio
 
 Configure your MCP client to use the proxy process via stdio transport.
 
+### Testing the Client Proxy
+
+To test that the client proxy is working correctly:
+
+```bash
+# Terminal 1: Start the MCP server
+pnpm start
+
+# Terminal 2: Start the client proxy
+pnpm example:client-proxy
+
+# Terminal 3: Run the test client
+pnpm example:client-proxy:run
+```
+
+The test client (`example/proxy/client.ts`) demonstrates a standard MCP client connecting through the proxy without any x402 payment code. The proxy handles all payment challenges transparently.
+
 ## Server Proxy
 
 The server proxy allows you to monetize access to API-key-protected MCP servers by accepting x402 payments instead of managing API keys for users.

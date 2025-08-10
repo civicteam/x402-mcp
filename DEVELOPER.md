@@ -30,7 +30,7 @@ pnpm test
 - `pnpm test` - Run tests in watch mode
 - `pnpm test:coverage` - Run tests with coverage report
 - `pnpm start` - Start the example server
-- `pnpm example` - Run the example client
+- `pnpm example:run` - Run the example client
 - `pnpm generate-wallet` - Generate a new wallet for testing
 
 ### Testing

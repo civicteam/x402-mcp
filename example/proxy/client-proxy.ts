@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 import { createClientProxy } from "../../src/index.js";
-import { createWalletClient, http } from "viem";
+import {createWalletClient, http, publicActions} from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
 import { config } from "dotenv";
 import path from "path";
+import {Wallet} from "x402/types";
 
 // Load environment variables
 config({ path: path.join(process.cwd(), ".env") });
@@ -18,7 +19,7 @@ config({ path: path.join(process.cwd(), ".env") });
  */
 async function main() {
   const PRIVATE_KEY = process.env.SENDER_PRIVATE_KEY as `0x${string}`;
-  const TARGET_MCP_URL = process.env.TARGET_MCP_URL || "http://localhost:3022";
+  const TARGET_MCP_URL = process.env.TARGET_MCP_URL || "http://localhost:3022/mcp";
   const PROXY_MODE = process.env.CLIENT_PROXY_MODE || "http";
   const PROXY_PORT = parseInt(process.env.CLIENT_PROXY_PORT || "4000");
 
@@ -40,11 +41,11 @@ async function main() {
 
     // Create wallet client for payments
     const account = privateKeyToAccount(PRIVATE_KEY);
-    const walletClient = createWalletClient({
+    const wallet = createWalletClient({
       account,
       chain: baseSepolia,
       transport: http()
-    });
+    }).extend(publicActions) as Wallet;
 
     log("💰 Payment wallet:", account.address);
     log("🌐 Network: Base Sepolia");
@@ -60,12 +61,12 @@ async function main() {
       useStdio
         ? {
             targetUrl: TARGET_MCP_URL,
-            walletClient,
+            wallet,
             mode: 'stdio'
           }
         : {
             targetUrl: TARGET_MCP_URL,
-            walletClient,
+            wallet,
             mode: 'http',
             port: PROXY_PORT
           }

@@ -9,9 +9,10 @@
     "dev": "tsx watch example/server.ts",
     "build": "tsc",
     "start": "tsx example/server.ts",
-    "example": "tsx example/client.ts",
+    "example:run": "tsx example/client.ts",
     "example:client-proxy": "tsx example/proxy/client-proxy.ts",
     "example:client-proxy:stdio": "tsx example/proxy/client-proxy.ts --stdio",
+    "example:client-proxy:run": "tsx example/proxy/client.ts",
     "example:server-proxy": "tsx example/proxy/server-proxy.ts",
     "generate-wallet": "tsx scripts/generateWallet.ts",
     "test": "vitest",
@@ -22,9 +23,9 @@
   },
   "dependencies": {
     "@civic/hook-common": "0.2.3",
-    "@civic/passthrough-mcp-server": "^0.7.0-beta4",
+    "@civic/passthrough-mcp-server": "^0.7.0-beta5",
     "viem": "^2.33.2",
-    "x402": "^0.4.3",
+    "x402": "^0.5.0",
     "x402-fetch": "^0.4.2"
   },
   "devDependencies": {
