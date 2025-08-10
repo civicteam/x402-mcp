@@ -1,8 +1,7 @@
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { wrapFetchWithPayment } from "x402-fetch";
-import { convertHeaders } from "./util.js";
-import { Wallet } from "x402/types";
-import {WalletClient} from "viem";
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import type { Wallet } from 'x402/types';
+import { wrapFetchWithPayment } from 'x402-fetch';
+import { convertHeaders } from './util.js';
 
 /**
  * Creates a payment-aware MCP client transport that automatically handles X402 payments
@@ -31,7 +30,7 @@ export function makePaymentAwareClientTransport(
     const headers = {
       ...convertHeaders(init?.headers),
       // MCP's StreamableHTTPClientTransport already sets this, but we ensure it's present
-      'Accept': 'application/json, text/event-stream'
+      Accept: 'application/json, text/event-stream',
     };
 
     const response = await x402Fetch(input, {
@@ -48,7 +47,7 @@ export function makePaymentAwareClientTransport(
           paymentCallback(decoded.txHash);
         }
       } catch (e) {
-        console.error("❌ Failed to decode payment response:", e);
+        console.error('❌ Failed to decode payment response:', e);
       }
     }
 
@@ -56,10 +55,7 @@ export function makePaymentAwareClientTransport(
   };
 
   // Create and return transport with x402-enabled fetch
-  return new StreamableHTTPClientTransport(
-    new URL(serverUrl),
-    {
-      fetch: fetchWithPayment as typeof fetch,
-    }
-  );
+  return new StreamableHTTPClientTransport(new URL(serverUrl), {
+    fetch: fetchWithPayment as typeof fetch,
+  });
 }

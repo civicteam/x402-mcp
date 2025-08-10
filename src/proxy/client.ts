@@ -2,12 +2,11 @@ import {
   createHttpPassthroughProxy,
   createStdioPassthroughProxy,
   type HttpProxyConfig,
+  type PassthroughProxy,
   type StdioProxyConfig,
-  type PassthroughProxy
-} from "@civic/passthrough-mcp-server";
-import { makePaymentAwareClientTransport } from "../client.js";
-import type { WalletClient } from "viem";
-import {Wallet} from "x402/types";
+} from '@civic/passthrough-mcp-server';
+import type { Wallet } from 'x402/types';
+import { makePaymentAwareClientTransport } from '../client.js';
 
 /**
  * Creates a client-side proxy that handles x402 payments on behalf of MCP clients
@@ -20,28 +19,30 @@ import {Wallet} from "x402/types";
  * @param params.port - The port for the proxy to listen on (only for HTTP mode, default: 4000)
  * @returns The proxy instance
  */
-export async function createClientProxy(params: {
-  targetUrl: string,
-  wallet: Wallet,
-} & ({
-  mode: 'stdio',
-} | {
-  mode: 'http',
-  port?: number,
-})): Promise<PassthroughProxy> {
+export async function createClientProxy(
+  params: {
+    targetUrl: string;
+    wallet: Wallet;
+  } & (
+    | {
+        mode: 'stdio';
+      }
+    | {
+        mode: 'http';
+        port?: number;
+      }
+  )
+): Promise<PassthroughProxy> {
   // Create the payment-aware transport for the target
-  const paymentAwareTransport = makePaymentAwareClientTransport(
-    params.targetUrl,
-    params.wallet
-  );
+  const paymentAwareTransport = makePaymentAwareClientTransport(params.targetUrl, params.wallet);
 
   if (params.mode === 'stdio') {
     // Create stdio proxy configuration
     const config: StdioProxyConfig = {
       target: {
-        transportType: "custom",
-        transportFactory: () => paymentAwareTransport
-      }
+        transportType: 'custom',
+        transportFactory: () => paymentAwareTransport,
+      },
     };
 
     return createStdioPassthroughProxy(config);
@@ -50,9 +51,9 @@ export async function createClientProxy(params: {
     const config: HttpProxyConfig = {
       port: params.port ?? 4000,
       target: {
-        transportType: "custom",
-        transportFactory: () => paymentAwareTransport
-      }
+        transportType: 'custom',
+        transportFactory: () => paymentAwareTransport,
+      },
     };
 
     return createHttpPassthroughProxy(config);

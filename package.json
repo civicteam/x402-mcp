@@ -16,7 +16,11 @@
     "example:server-proxy": "tsx example/proxy/server-proxy.ts",
     "generate-wallet": "tsx scripts/generateWallet.ts",
     "test": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "check": "biome check --formatter-enabled=false ."
   },
   "peerDependencies": {
     "@modelcontextprotocol/sdk": "^1.17.0"
@@ -29,6 +33,7 @@
     "x402-fetch": "^0.4.2"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.1.4",
     "@modelcontextprotocol/sdk": "^1.17.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",

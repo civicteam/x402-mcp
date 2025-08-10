@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { convertHeaders } from './util.js';
 
 describe('convertHeaders', () => {
@@ -16,11 +16,11 @@ describe('convertHeaders', () => {
     const headers = new Headers();
     headers.append('Content-Type', 'application/json');
     headers.append('Accept', 'application/json, text/event-stream');
-    
+
     const result = convertHeaders(headers);
     expect(result).toEqual({
       'content-type': 'application/json',
-      'accept': 'application/json, text/event-stream'
+      accept: 'application/json, text/event-stream',
     });
   });
 
@@ -28,24 +28,24 @@ describe('convertHeaders', () => {
     const headers: [string, string][] = [
       ['Content-Type', 'application/json'],
       ['Accept', 'application/json, text/event-stream'],
-      ['X-Custom-Header', 'value']
+      ['X-Custom-Header', 'value'],
     ];
-    
+
     const result = convertHeaders(headers);
     expect(result).toEqual({
       'Content-Type': 'application/json',
-      'Accept': 'application/json, text/event-stream',
-      'X-Custom-Header': 'value'
+      Accept: 'application/json, text/event-stream',
+      'X-Custom-Header': 'value',
     });
   });
 
   it('should return plain object as-is', () => {
     const headers = {
       'Content-Type': 'application/json',
-      'Accept': 'application/json, text/event-stream',
-      'X-Custom-Header': 'value'
+      Accept: 'application/json, text/event-stream',
+      'X-Custom-Header': 'value',
     };
-    
+
     const result = convertHeaders(headers);
     expect(result).toEqual(headers);
   });
@@ -72,7 +72,7 @@ describe('convertHeaders', () => {
     const headers = new Headers();
     headers.append('Set-Cookie', 'session=abc');
     headers.append('Set-Cookie', 'user=123');
-    
+
     const result = convertHeaders(headers);
     // Note: In Node.js environment, Headers may handle multiple values differently
     // The last value might override previous ones instead of concatenating

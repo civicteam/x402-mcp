@@ -1,22 +1,21 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { makePaymentAwareClientTransport } from './client.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Wallet } from 'x402/types';
 import { wrapFetchWithPayment } from 'x402-fetch';
+import { makePaymentAwareClientTransport } from './client.js';
 import { convertHeaders } from './util.js';
-import { WalletClient } from 'viem';
-import {Wallet} from "x402/types";
 
 // Mock dependencies
 vi.mock('@modelcontextprotocol/sdk/client/streamableHttp.js', () => ({
-  StreamableHTTPClientTransport: vi.fn()
+  StreamableHTTPClientTransport: vi.fn(),
 }));
 
 vi.mock('x402-fetch', () => ({
-  wrapFetchWithPayment: vi.fn()
+  wrapFetchWithPayment: vi.fn(),
 }));
 
 vi.mock('./util.js', () => ({
-  convertHeaders: vi.fn()
+  convertHeaders: vi.fn(),
 }));
 
 // Mock global fetch using vi.stubGlobal
@@ -32,7 +31,7 @@ describe('makePaymentAwareClientTransport', () => {
 
     mockWallet = {
       account: { address: '0xabc' },
-      chain: { id: 1 }
+      chain: { id: 1 },
     } as unknown as Wallet;
 
     mockX402Fetch = vi.fn();
@@ -41,9 +40,13 @@ describe('makePaymentAwareClientTransport', () => {
     vi.mocked(convertHeaders).mockImplementation((headers) => {
       if (!headers) return {};
       if (headers instanceof Headers) {
-        const obj: Record<string, string> = {};
-        headers.forEach((value, key) => obj[key] = value);
-        return obj;
+        return Array.from(headers.entries()).reduce(
+          (acc, [key, value]) => {
+            acc[key] = value;
+            return acc;
+          },
+          {} as Record<string, string>
+        );
       }
       return headers as Record<string, string>;
     });
@@ -64,7 +67,7 @@ describe('makePaymentAwareClientTransport', () => {
     expect(StreamableHTTPClientTransport).toHaveBeenCalledWith(
       expect.any(URL),
       expect.objectContaining({
-        fetch: expect.any(Function)
+        fetch: expect.any(Function),
       })
     );
   });
@@ -77,7 +80,7 @@ describe('makePaymentAwareClientTransport', () => {
     expect(StreamableHTTPClientTransport).toHaveBeenCalledWith(
       serverUrl,
       expect.objectContaining({
-        fetch: expect.any(Function)
+        fetch: expect.any(Function),
       })
     );
   });
@@ -101,18 +104,18 @@ describe('makePaymentAwareClientTransport', () => {
 
       const headers = new Headers({
         'Content-Type': 'application/json',
-        'X-Custom': 'value'
+        'X-Custom': 'value',
       });
 
       vi.mocked(convertHeaders).mockReturnValue({
         'Content-Type': 'application/json',
-        'X-Custom': 'value'
+        'X-Custom': 'value',
       });
 
       await fetchWithPayment('http://localhost:3000', {
         method: 'POST',
         headers,
-        body: 'test'
+        body: 'test',
       });
 
       expect(convertHeaders).toHaveBeenCalledWith(headers);
@@ -124,8 +127,8 @@ describe('makePaymentAwareClientTransport', () => {
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
             'X-Custom': 'value',
-            'Accept': 'application/json, text/event-stream'
-          })
+            Accept: 'application/json, text/event-stream',
+          }),
         })
       );
     });
@@ -137,7 +140,7 @@ describe('makePaymentAwareClientTransport', () => {
       vi.mocked(convertHeaders).mockReturnValue({});
 
       await fetchWithPayment('http://localhost:3000', {
-        method: 'GET'
+        method: 'GET',
       });
 
       expect(mockX402Fetch).toHaveBeenCalledWith(
@@ -145,19 +148,19 @@ describe('makePaymentAwareClientTransport', () => {
         expect.objectContaining({
           method: 'GET',
           headers: expect.objectContaining({
-            'Accept': 'application/json, text/event-stream'
-          })
+            Accept: 'application/json, text/event-stream',
+          }),
         })
       );
     });
 
     it('should call payment callback when payment response is present', async () => {
       const mockHeaders = new Headers({
-        'X-PAYMENT-RESPONSE': 'eyJ0eEhhc2giOiAiMHgxMjMifQ=='
+        'X-PAYMENT-RESPONSE': 'eyJ0eEhhc2giOiAiMHgxMjMifQ==',
       });
       const mockResponse = new Response('test', {
         status: 200,
-        headers: mockHeaders
+        headers: mockHeaders,
       });
       mockX402Fetch.mockResolvedValue(mockResponse);
 
@@ -168,11 +171,11 @@ describe('makePaymentAwareClientTransport', () => {
 
     it('should handle invalid payment response gracefully', async () => {
       const mockHeaders = new Headers({
-        'X-PAYMENT-RESPONSE': 'not-valid-base64!!!'
+        'X-PAYMENT-RESPONSE': 'not-valid-base64!!!',
       });
       const mockResponse = new Response('test', {
         status: 200,
-        headers: mockHeaders
+        headers: mockHeaders,
       });
       mockX402Fetch.mockResolvedValue(mockResponse);
 
@@ -199,11 +202,11 @@ describe('makePaymentAwareClientTransport', () => {
       const fetchWithoutCallback = transportCall[1]?.fetch;
 
       const mockHeaders = new Headers({
-        'X-PAYMENT-RESPONSE': 'eyJ0eEhhc2giOiAiMHgxMjMifQ=='
+        'X-PAYMENT-RESPONSE': 'eyJ0eEhhc2giOiAiMHgxMjMifQ==',
       });
       const mockResponse = new Response('test', {
         status: 200,
-        headers: mockHeaders
+        headers: mockHeaders,
       });
       mockX402Fetch.mockResolvedValue(mockResponse);
 
@@ -216,19 +219,19 @@ describe('makePaymentAwareClientTransport', () => {
       mockX402Fetch.mockResolvedValue(mockResponse);
 
       vi.mocked(convertHeaders).mockReturnValue({
-        'Accept': 'application/xml'
+        Accept: 'application/xml',
       });
 
       await fetchWithPayment('http://localhost:3000', {
-        headers: { 'Accept': 'application/xml' }
+        headers: { Accept: 'application/xml' },
       });
 
       expect(mockX402Fetch).toHaveBeenCalledWith(
         'http://localhost:3000',
         expect.objectContaining({
           headers: expect.objectContaining({
-            'Accept': 'application/json, text/event-stream'
-          })
+            Accept: 'application/json, text/event-stream',
+          }),
         })
       );
     });

@@ -1,4 +1,4 @@
-import { AbstractHook } from "@civic/passthrough-mcp-server";
+import { AbstractHook } from '@civic/passthrough-mcp-server';
 
 /**
  * Hook that adds an API key to outgoing requests to authenticate with upstream MCP servers
@@ -9,7 +9,7 @@ export class ApiKeyHook extends AbstractHook {
   }
 
   get name(): string {
-    return "api-key-injector";
+    return 'api-key-injector';
   }
 
   /**
@@ -22,14 +22,14 @@ export class ApiKeyHook extends AbstractHook {
         ...request.requestContext,
         headers: {
           ...request.requestContext?.headers,
-          'Authorization': `Bearer ${this.apiKey}`
-        }
-      }
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+      },
     };
 
     return {
-      resultType: "continue",
-      request: modifiedRequest
+      resultType: 'continue',
+      request: modifiedRequest,
     };
   }
 
@@ -43,14 +43,14 @@ export class ApiKeyHook extends AbstractHook {
         ...request.requestContext,
         headers: {
           ...request.requestContext?.headers,
-          'Authorization': `Bearer ${this.apiKey}`
-        }
-      }
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+      },
     };
 
     return {
-      resultType: "continue",
-      request: modifiedRequest
+      resultType: 'continue',
+      request: modifiedRequest,
     };
   }
 
@@ -64,14 +64,14 @@ export class ApiKeyHook extends AbstractHook {
         ...request.requestContext,
         headers: {
           ...request.requestContext?.headers,
-          'Authorization': `Bearer ${this.apiKey}`
-        }
-      }
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+      },
     };
 
     return {
-      resultType: "continue",
-      request: modifiedRequest
+      resultType: 'continue',
+      request: modifiedRequest,
     };
   }
 }
