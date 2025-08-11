@@ -1,4 +1,4 @@
-import { type Config, createPassthroughProxy, type PassthroughProxy } from '@civic/passthrough-mcp-server';
+import { createPassthroughProxy, type PassthroughProxy } from '@civic/passthrough-mcp-server';
 import type { Address } from 'viem';
 import { makePaymentAwareServerTransport } from '../server.js';
 import { ApiKeyHook } from './hooks/apiKeyHook.js';
@@ -21,8 +21,7 @@ export async function createServerProxy(
   upstreamUrl: string,
   apiKey: string,
   paymentWallet: Address | string,
-  toolPricing: Record<string, string>,
-  _port: number = 5000
+  toolPricing: Record<string, string>
 ): Promise<PassthroughProxy> {
   // Create the payment-aware server transport
   const paymentAwareTransport = makePaymentAwareServerTransport(paymentWallet, toolPricing);
@@ -30,20 +29,15 @@ export async function createServerProxy(
   // Create the API key hook
   const apiKeyHook = new ApiKeyHook(apiKey);
 
-  // Create the proxy configuration
-  const config: Config = {
+  // Create and return the proxy
+  return createPassthroughProxy({
     sourceTransportType: 'custom',
-    sourceTransport: paymentAwareTransport as any, // The transport types don't perfectly align but this works
+    sourceTransport: paymentAwareTransport,
     target: {
       url: upstreamUrl,
       transportType: 'httpStream',
     },
     hooks: [apiKeyHook],
-  };
-
-  // Create and return the proxy
-  return createPassthroughProxy({
-    ...config,
     autoStart: true,
-  } as any);
+  });
 }
