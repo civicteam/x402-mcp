@@ -24,7 +24,7 @@ export async function createServerProxy(
   toolPricing: Record<string, string>
 ): Promise<PassthroughProxy> {
   // Create the payment-aware server transport
-  const paymentAwareTransport = makePaymentAwareServerTransport(paymentWallet, toolPricing);
+  const _paymentAwareTransport = makePaymentAwareServerTransport(paymentWallet, toolPricing);
 
   // Create the API key hook
   const apiKeyHook = new ApiKeyHook(apiKey);
