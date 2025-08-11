@@ -1,4 +1,4 @@
-# X402 MCP Integration
+# X402 MCP
 
 A server and client implementation for integrating X402 payment protocol with Model Context Protocol (MCP), enabling micropayments for MCP tool invocations.
 
@@ -21,11 +21,16 @@ Try this out with your LLM by adding the following MCP server:
 }
 ```
 
+This will connect to a hosted X402 MCP server that charges for tool invocations in USDC.
+
+The demo uses the Base Sepolia testnet. Obtain testnet ETH (for gas) and USDC (for payments) from a faucet like [the Coinbase developer platform faucet](https://portal.cdp.coinbase.com/products/faucet).
+
 ## Quick Start
 
 Enable micropayments for your MCP tools with X402 - get paid in USDC for every tool invocation.
 
 **Server**: Charge for tool usage
+
 ```typescript
 const transport = makePaymentAwareServerTransport(
   "0x123...",
@@ -43,6 +48,26 @@ const transport = makePaymentAwareClientTransport(
 await mcpClient.connect(transport);
 ```
 
+## Table of Contents
+
+- [Demo](#demo)
+- [Quick Start](#quick-start)
+- [What is X402?](#what-is-x402)
+- [What is MCP?](#what-is-mcp)
+- [How MCP Works with Streaming HTTP](#how-mcp-works-with-streaming-http)
+- [Integrating MCP and X402](#integrating-mcp-and-x402)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Server Setup](#server-setup)
+  - [Client Setup](#client-setup)
+  - [Streaming Limitation](#streaming-limitation)
+- [Proxy Support](#proxy-support)
+  - [Client Proxy](#client-proxy)
+  - [Server Proxy](#server-proxy)
+  - [Use Cases](#use-cases)
+  - [Architecture](#architecture)
+- [License](#license)
+
 ## What is X402?
 
 X402 is an open payment protocol developed by Coinbase that enables instant, automatic stablecoin payments directly over HTTP. It revives the HTTP 402 Payment Required status code to create a simple, programmatic payment flow:
@@ -55,7 +80,7 @@ X402 is an open payment protocol developed by Coinbase that enables instant, aut
 
 Key features:
 - Programmatic payments without accounts or complex authentication
-- Direct onchain payments with minimal setup
+- Direct on-chain payments with minimal setup
 - Machine-to-machine transaction support
 - Micropayments and usage-based billing
 
@@ -88,6 +113,8 @@ This library integrates X402 payments into MCP by:
 
 1. **Server-side**: Wrapping the MCP `StreamableHTTPServerTransport` to intercept tool calls and require payments
 2. **Client-side**: Using a custom fetch implementation that automatically handles 402 responses and payment flows
+
+![Direct Integration](docs/direct.png)
 
 ## Installation
 
@@ -198,6 +225,33 @@ The library includes proxy functionality to bridge between payment-aware and non
 
 The client proxy allows non-payment-aware MCP clients (like Claude Desktop) to connect to payment-enabled MCP servers. It handles X402 payments transparently on behalf of the client.
 
+![Client Proxy Architecture](docs/client-proxy.png)
+
+#### CLI mode
+
+You can run a client proxy easily with the CLI, making it easy to integrate into LLM agents such as Claude Desktop or Cursor.
+
+```bash
+# Run as stdio proxy (default mode)
+TARGET_URL=http://server.com/mcp PRIVATE_KEY=0x... npx @civic/x402-mcp client-proxy
+
+# Or explicitly specify stdio mode
+MODE=stdio TARGET_URL=http://server.com/mcp PRIVATE_KEY=0x... npx @civic/x402-mcp client-proxy
+
+# Run in HTTP mode
+MODE=http PORT=3001 TARGET_URL=http://server.com/mcp PRIVATE_KEY=0x... npx @civic/x402-mcp client-proxy
+```
+
+Environment variables:
+- `TARGET_URL` (required): The MCP server URL to proxy to
+- `PRIVATE_KEY` (required): Private key for the wallet (must start with 0x)
+- `MODE` (optional): Transport mode - "stdio" or "http" (default: stdio)
+- `PORT` (optional): Port for HTTP mode (default: 3000)
+- `NETWORK` (optional): Network/chain name from viem (default: baseSepolia). Examples: mainnet, sepolia, baseSepolia, optimism, arbitrum, polygon
+
+
+#### Programmatic Integration
+
 ```typescript
 import { createClientProxy } from "@civic/x402-mcp";
 
@@ -216,32 +270,11 @@ const proxy = await createClientProxy({
 // Payments are handled automatically by the proxy
 ```
 
-The client proxy also supports stdio mode for direct integration:
-
-```bash
-# Run as stdio proxy (default mode)
-TARGET_URL=http://server.com/mcp PRIVATE_KEY=0x... npx @civic/x402-mcp client-proxy
-
-# Or explicitly specify stdio mode
-MODE=stdio TARGET_URL=http://server.com/mcp PRIVATE_KEY=0x... npx @civic/x402-mcp client-proxy
-
-# Run in HTTP mode on a specific port
-MODE=http PORT=3001 TARGET_URL=http://server.com/mcp PRIVATE_KEY=0x... npx @civic/x402-mcp client-proxy
-
-# For local development without npx
-TARGET_URL=http://server.com/mcp PRIVATE_KEY=0x... pnpm proxy
-```
-
-Environment variables:
-- `TARGET_URL` (required): The MCP server URL to proxy to
-- `PRIVATE_KEY` (required): Private key for the wallet (must start with 0x)
-- `MODE` (optional): Transport mode - "stdio" or "http" (default: stdio)
-- `PORT` (optional): Port for HTTP mode (default: 3000)
-- `NETWORK` (optional): Network/chain name from viem (default: base-sepolia). Examples: mainnet, sepolia, baseSepolia, optimism, arbitrum, polygon
-
 ### Server Proxy
 
 The server proxy enables monetization of existing MCP servers that use API keys. It accepts X402 payments and injects API keys into upstream requests.
+
+![Server Proxy Architecture](docs/server-proxy.png)
 
 ```typescript
 import { createServerProxy } from "@civic/x402-mcp";
@@ -270,21 +303,16 @@ const proxy = await createServerProxy({
 - Test payment flows during development
 
 **Server Proxy Use Cases:**
-- Monetize access to API-key-protected services (OpenAI, Anthropic, etc.)
+- Monetize access to API-key-protected services
 - Add micropayment layer to existing MCP servers without modifying their code
 - Create pay-per-use wrappers around proprietary tools
 
 ### Architecture
 
-```
-Client Proxy Flow:
-MCP Client → Client Proxy (handles X402) → Payment-Required Server
+The proxy implementations provide transparent payment handling while maintaining full MCP protocol compatibility:
 
-Server Proxy Flow:  
-Payment Client → Server Proxy (accepts X402) → API-Key Server
-                       ↓
-                 Adds API key header
-```
+- **Client Proxy**: Sits between non-payment-aware MCP clients and payment-required servers, handling X402 payments automatically (see diagram above)
+- **Server Proxy**: Accepts X402 payments from clients and adds API keys when forwarding to upstream servers (see diagram above)
 
 Both proxies maintain full MCP protocol compatibility while transparently handling the X402 payment flow.
 
