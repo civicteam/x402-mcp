@@ -1,16 +1,16 @@
 #!/usr/bin/env node
-import { createClientProxy } from '../src/proxy/index.js';
-import { createWalletClient, http, publicActions } from 'viem';
+import { type Chain, createWalletClient, http, publicActions } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { baseSepolia } from 'viem/chains';
+import * as chains from 'viem/chains';
 import type { Wallet } from 'x402/types';
+import { createClientProxy } from '../src/proxy/index.js';
 
 /**
  * Client proxy script for X402 MCP
- * 
+ *
  * Usage:
  *   TARGET_URL=http://server.com/mcp PRIVATE_KEY=0x... npx @civic/x402-mcp client-proxy
- *   
+ *
  * Environment variables:
  *   TARGET_URL - MCP server URL to proxy to (required)
  *   PRIVATE_KEY - Private key for wallet (required)
@@ -50,17 +50,30 @@ async function main() {
     process.exit(1);
   }
 
-  // Set up wallet
-  let chain;
-  switch (network) {
-    case 'base-sepolia':
-    case 'baseSepolia':
-      chain = baseSepolia;
+  // Set up wallet - look up chain by name
+  let chain: Chain | undefined;
+
+  // Try to find the chain by various name formats
+  const networkLower = network.toLowerCase().replace(/[-_]/g, '');
+
+  for (const [key, value] of Object.entries(chains)) {
+    // Skip non-chain exports (like functions)
+    if (!value || typeof value !== 'object' || !('id' in value)) continue;
+
+    const chainName = key.toLowerCase().replace(/[-_]/g, '');
+    const chainNetwork = (value as any).network?.toLowerCase().replace(/[-_]/g, '');
+
+    if (chainName === networkLower || chainNetwork === networkLower) {
+      chain = value as Chain;
       break;
-    default:
-      console.error(`❌ Error: Unsupported network: ${network}`);
-      console.error('Supported networks: base-sepolia');
-      process.exit(1);
+    }
+  }
+
+  if (!chain) {
+    console.error(`❌ Error: Unsupported network: ${network}`);
+    console.error('Examples of supported networks: mainnet, sepolia, baseSepolia, optimism, arbitrum, polygon');
+    console.error('Use the chain name as exported from viem/chains');
+    process.exit(1);
   }
 
   try {

@@ -218,7 +218,7 @@ Environment variables:
 - `PRIVATE_KEY` (required): Private key for the wallet (must start with 0x)
 - `MODE` (optional): Transport mode - "stdio" or "http" (default: stdio)
 - `PORT` (optional): Port for HTTP mode (default: 3000)
-- `NETWORK` (optional): Network to use (default: base-sepolia)
+- `NETWORK` (optional): Network/chain name from viem (default: base-sepolia). Examples: mainnet, sepolia, baseSepolia, optimism, arbitrum, polygon
 
 ### Server Proxy
 
