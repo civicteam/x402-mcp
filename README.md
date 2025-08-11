@@ -2,6 +2,25 @@
 
 A server and client implementation for integrating X402 payment protocol with Model Context Protocol (MCP), enabling micropayments for MCP tool invocations.
 
+## Demo
+
+Try this out with your LLM by adding the following MCP server:
+
+```json
+{
+  "mcpServers": {
+    "x402": {
+      "command": "npx",
+      "args": [ "@civic/x402-mcp@0.0.3" ],
+      "env": {
+        "PRIVATE_KEY": "Your wallet private key",
+        "TARGET_URL": "https://x402-mcp.fly.dev/mcp"
+      }
+    }
+  }
+}
+```
+
 ## Quick Start
 
 Enable micropayments for your MCP tools with X402 - get paid in USDC for every tool invocation.
