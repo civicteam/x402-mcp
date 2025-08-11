@@ -1,0 +1,42 @@
+# Development and configuration files
+.claude/
+.github/
+.idea/
+.env
+.env.example
+*.log
+*.sh
+
+# Source files (we only ship dist)
+src/
+scripts/
+example/
+
+# Test files
+*.test.ts
+*.test.js
+*.test.d.ts
+vitest.config.ts
+coverage/
+
+# Development documentation
+DEVELOPER.md
+CLAUDE.md
+
+# Editor and system files
+.DS_Store
+.vscode/
+*.swp
+*.swo
+
+# Config files not needed in package
+tsconfig.json
+biome.json
+mcp-servers.json
+
+# Build artifacts we don't want
+*.map
+*.tsbuildinfo
+
+# Keep only dist folder for runtime
+!dist/

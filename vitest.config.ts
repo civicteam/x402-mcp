@@ -13,14 +13,14 @@ export default defineConfig({
         'scripts/**',
         '**/*.config.ts',
         '**/*.test.ts',
-        '**/*.spec.ts'
+        '**/*.spec.ts',
       ],
       thresholds: {
         lines: 90,
         functions: 85,
         branches: 90,
-        statements: 90
-      }
-    }
-  }
+        statements: 90,
+      },
+    },
+  },
 });

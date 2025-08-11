@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 
 async function generateWallet() {
   // Generate a new private key

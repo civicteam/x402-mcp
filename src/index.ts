@@ -1,5 +1,7 @@
 // Server-side exports
-export { makePaymentAwareServerTransport } from "./server.js";
 
 // Client-side exports
-export { makePaymentAwareClientTransport } from "./client.js";
+export { makePaymentAwareClientTransport } from './client.js';
+// Proxy exports
+export { ApiKeyHook, createClientProxy, createServerProxy } from './proxy/index.js';
+export { makePaymentAwareServerTransport } from './server.js';
