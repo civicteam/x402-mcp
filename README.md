@@ -19,7 +19,7 @@ await mcpServer.connect(transport);
 ```typescript
 const transport = makePaymentAwareClientTransport(
   "http://localhost:3000/mcp",
-  walletClient
+  wallet
 );
 await mcpClient.connect(transport);
 ```
@@ -118,21 +118,23 @@ Create a payment-aware transport for your MCP client:
 ```typescript
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { makePaymentAwareClientTransport } from "@civic/x402-mcp";
-import { createWalletClient, http } from "viem";
+import { createWalletClient, http, publicActions } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
+import type { Wallet } from "x402/types";
 
-// Set up your wallet client
-const walletClient = createWalletClient({
+// Set up your wallet client with public actions
+const wallet = createWalletClient({
   account: privateKeyToAccount("0x..."),
   chain: baseSepolia,
   transport: http()
-});
+}).extend(publicActions);
 
-// Create payment-aware transport
+// Create payment-aware transport with optional payment callback
 const transport = makePaymentAwareClientTransport(
   "http://localhost:3000/mcp",
-  walletClient
+  wallet
+  (txHash) => console.log("Payment sent:", txHash) // Optional callback
 );
 
 // Use with any MCP client
@@ -168,6 +170,104 @@ await client.connect(transport);
    - Supporting SSE would require modifying the X402 protocol to send settlement info in the message body
    - This would be a significant departure from the HTTP header-based design
    - For now, JSON responses provide the best compatibility between both protocols
+
+## Proxy Support
+
+The library includes proxy functionality to bridge between payment-aware and non-payment-aware MCP implementations. This enables two key scenarios:
+
+### Client Proxy
+
+The client proxy allows non-payment-aware MCP clients (like Claude Desktop) to connect to payment-enabled MCP servers. It handles X402 payments transparently on behalf of the client.
+
+```typescript
+import { createClientProxy } from "@civic/x402-mcp";
+
+// Set up wallet for payments
+const wallet = ...
+
+// Create proxy that handles payments
+const proxy = await createClientProxy({
+  targetUrl: "http://payment-required-server.com/mcp",
+  wallet: wallet as Wallet,
+  mode: "http",  // Use HTTP transport
+  port: 3001  // Local proxy port
+});
+
+// Non-payment-aware clients can now connect to http://localhost:3001
+// Payments are handled automatically by the proxy
+```
+
+The client proxy also supports stdio mode for direct integration:
+
+```bash
+# Run as stdio proxy (default mode)
+TARGET_URL=http://server.com/mcp PRIVATE_KEY=0x... npx @civic/x402-mcp client-proxy
+
+# Or explicitly specify stdio mode
+MODE=stdio TARGET_URL=http://server.com/mcp PRIVATE_KEY=0x... npx @civic/x402-mcp client-proxy
+
+# Run in HTTP mode on a specific port
+MODE=http PORT=3001 TARGET_URL=http://server.com/mcp PRIVATE_KEY=0x... npx @civic/x402-mcp client-proxy
+
+# For local development without npx
+TARGET_URL=http://server.com/mcp PRIVATE_KEY=0x... pnpm proxy
+```
+
+Environment variables:
+- `TARGET_URL` (required): The MCP server URL to proxy to
+- `PRIVATE_KEY` (required): Private key for the wallet (must start with 0x)
+- `MODE` (optional): Transport mode - "stdio" or "http" (default: stdio)
+- `PORT` (optional): Port for HTTP mode (default: 3000)
+- `NETWORK` (optional): Network to use (default: base-sepolia)
+
+### Server Proxy
+
+The server proxy enables monetization of existing MCP servers that use API keys. It accepts X402 payments and injects API keys into upstream requests.
+
+```typescript
+import { createServerProxy } from "@civic/x402-mcp";
+
+// Create proxy that accepts payments and adds API keys
+const proxy = await createServerProxy({
+  upstreamUrl: "http://api-key-protected-server.com/mcp",
+  apiKey: "sk-abc123...",  // API key for upstream server
+  paymentWallet: "0x...",   // Wallet to receive payments
+  toolPricing: {
+    "expensive-tool": "$0.010",
+    "another-tool": "$0.002"
+  },
+  port: 3002
+});
+
+// Clients can now pay for access at http://localhost:3002
+// Proxy handles payment and adds API key to upstream requests
+```
+
+### Use Cases
+
+**Client Proxy Use Cases:**
+- Enable Claude Desktop or other MCP clients to use payment-required servers
+- Add payment capabilities to existing MCP client implementations
+- Test payment flows during development
+
+**Server Proxy Use Cases:**
+- Monetize access to API-key-protected services (OpenAI, Anthropic, etc.)
+- Add micropayment layer to existing MCP servers without modifying their code
+- Create pay-per-use wrappers around proprietary tools
+
+### Architecture
+
+```
+Client Proxy Flow:
+MCP Client → Client Proxy (handles X402) → Payment-Required Server
+
+Server Proxy Flow:  
+Payment Client → Server Proxy (accepts X402) → API-Key Server
+                       ↓
+                 Adds API key header
+```
+
+Both proxies maintain full MCP protocol compatibility while transparently handling the X402 payment flow.
 
 ## License
 

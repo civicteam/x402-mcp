@@ -37,16 +37,14 @@ describe('makePaymentAwareClientTransport', () => {
     mockX402Fetch = vi.fn();
     vi.mocked(wrapFetchWithPayment).mockReturnValue(mockX402Fetch);
 
-    vi.mocked(convertHeaders).mockImplementation((headers) => {
+    vi.mocked(convertHeaders).mockImplementation((headers: HeadersInit | undefined): Record<string, string> => {
       if (!headers) return {};
       if (headers instanceof Headers) {
-        return Array.from(headers.entries()).reduce(
-          (acc, [key, value]) => {
-            acc[key] = value;
-            return acc;
-          },
-          {} as Record<string, string>
-        );
+        const obj: Record<string, string> = {};
+        headers.forEach((value: string, key: string) => {
+          obj[key] = value;
+        });
+        return obj;
       }
       return headers as Record<string, string>;
     });
