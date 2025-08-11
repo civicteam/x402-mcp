@@ -54,7 +54,7 @@ async function main() {
     });
 
     // Create and start the proxy
-    const proxy = await createServerProxy(UPSTREAM_URL, UPSTREAM_API_KEY, PAYMENT_WALLET, TOOL_PRICING, PROXY_PORT);
+    const proxy = await createServerProxy(UPSTREAM_URL, UPSTREAM_API_KEY, PAYMENT_WALLET, TOOL_PRICING);
 
     console.log(`\n✅ Server proxy started on http://localhost:${PROXY_PORT}/mcp`);
     console.log('\nClients can now connect to this proxy and pay for access to the upstream server.');

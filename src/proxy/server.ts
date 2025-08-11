@@ -31,8 +31,9 @@ export async function createServerProxy(
 
   // Create and return the proxy
   return createPassthroughProxy({
-    sourceTransportType: 'custom',
-    sourceTransport: paymentAwareTransport,
+    sourceTransportType: 'httpStream', //'custom',
+    port: 5000,
+    // sourceTransport: paymentAwareTransport,
     target: {
       url: upstreamUrl,
       transportType: 'httpStream',
