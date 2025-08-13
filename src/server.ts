@@ -1,6 +1,9 @@
 import type { OutgoingHttpHeader, OutgoingHttpHeaders } from 'node:http';
 import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js';
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import {
+  StreamableHTTPServerTransport,
+  type StreamableHTTPServerTransportOptions,
+} from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import {
   type CallToolRequest,
   isJSONRPCError,
@@ -29,8 +32,6 @@ import { useFacilitator } from 'x402/verify';
 interface X402TransportOptions {
   payTo: Address;
   facilitator?: FacilitatorConfig;
-  sessionIdGenerator?: () => string;
-  enableJsonResponse?: boolean;
   toolPricing?: Record<string, string>;
 }
 
@@ -61,8 +62,7 @@ interface PaymentInfo {
   req?: IncomingMessage;
 }
 
-export class X402StreamableHTTPServerTransport {
-  private transport: StreamableHTTPServerTransport;
+export class X402StreamableHTTPServerTransport extends StreamableHTTPServerTransport {
   private payTo: Address;
   private facilitator?: FacilitatorConfig;
   private settlementMap: Map<string | number, SettlementInfo> = new Map();
@@ -72,9 +72,10 @@ export class X402StreamableHTTPServerTransport {
   private currentResponse: ServerResponse | null = null;
   private responsePaymentHeaders: Map<ServerResponse, string> = new Map();
 
-  constructor(options: X402TransportOptions) {
-    this.transport = new StreamableHTTPServerTransport({
-      sessionIdGenerator: options.sessionIdGenerator,
+  constructor(options: X402TransportOptions & StreamableHTTPServerTransportOptions) {
+    // Pass through the base transport options, defaulting enableJsonResponse to true
+    super({
+      ...options,
       enableJsonResponse: options.enableJsonResponse ?? true, // Default to JSON responses
     });
 
@@ -89,36 +90,7 @@ export class X402StreamableHTTPServerTransport {
     this.setupMessageInterception();
   }
 
-  // Delegate transport methods
-  get sessionId() {
-    return this.transport.sessionId;
-  }
-  get onclose() {
-    return this.transport.onclose;
-  }
-  set onclose(handler) {
-    this.transport.onclose = handler;
-  }
-  get onerror() {
-    return this.transport.onerror;
-  }
-  set onerror(handler) {
-    this.transport.onerror = handler;
-  }
-  get onmessage() {
-    return this.transport.onmessage;
-  }
-  set onmessage(handler) {
-    this.transport.onmessage = handler;
-  }
-
-  async start() {
-    return this.transport.start();
-  }
-
-  async close() {
-    return this.transport.close();
-  }
+  // No need to delegate - we inherit these from the parent class
 
   async send(
     message: JSONRPCMessage,
@@ -149,7 +121,7 @@ export class X402StreamableHTTPServerTransport {
       }
     }
 
-    return this.transport.send(message, options);
+    return super.send(message, options);
   }
 
   async handleRequest(
@@ -181,7 +153,7 @@ export class X402StreamableHTTPServerTransport {
 
     // Only intercept POST requests to the MCP endpoint
     if (req.method !== 'POST' || !parsedBody) {
-      return this.transport.handleRequest(req, res, parsedBody);
+      return super.handleRequest(req, res, parsedBody);
     }
 
     // Check if this is a tool call that requires payment
@@ -198,7 +170,7 @@ export class X402StreamableHTTPServerTransport {
 
     if (!toolCall) {
       console.log('   ✅ No paid tool calls, delegating to transport');
-      return this.transport.handleRequest(req, res, parsedBody);
+      return super.handleRequest(req, res, parsedBody);
     }
 
     const toolName = toolCall.params.name;
@@ -301,15 +273,15 @@ export class X402StreamableHTTPServerTransport {
       req,
     };
 
-    // Delegate to transport
-    return this.transport.handleRequest(req, res, parsedBody);
+    // Delegate to parent class
+    return super.handleRequest(req, res, parsedBody);
   }
 
   private setupMessageInterception() {
-    const originalOnMessage = this.transport.onmessage;
+    const originalOnMessage = this.onmessage;
 
     // Intercept incoming messages
-    this.transport.onmessage = async (message: JSONRPCMessage, extra?: MessageExtraInfo) => {
+    this.onmessage = async (message: JSONRPCMessage, extra?: MessageExtraInfo) => {
       console.log('   🔍 [X402Transport] Intercepting message:', message);
 
       // Check if this is a tool call that requires payment
@@ -332,7 +304,7 @@ export class X402StreamableHTTPServerTransport {
 
       // Call original handler
       if (originalOnMessage) {
-        await originalOnMessage.call(this.transport, message, extra);
+        await originalOnMessage.call(this, message, extra);
       }
     };
   }
@@ -435,10 +407,8 @@ export class X402StreamableHTTPServerTransport {
 export function makePaymentAwareServerTransport(
   payTo: Address | string,
   toolPricing: Record<string, string>,
-  options?: {
+  options?: Partial<StreamableHTTPServerTransportOptions> & {
     facilitator?: FacilitatorConfig;
-    sessionIdGenerator?: () => string;
-    enableJsonResponse?: boolean;
   }
 ): X402StreamableHTTPServerTransport {
   return new X402StreamableHTTPServerTransport({

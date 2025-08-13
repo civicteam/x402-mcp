@@ -12,8 +12,8 @@ importers:
         specifier: 0.2.3
         version: 0.2.3(typescript@5.9.2)
       '@civic/passthrough-mcp-server':
-        specifier: ^0.7.0-beta5
-        version: 0.7.0-beta5(typescript@5.9.2)
+        specifier: 0.7.1
+        version: 0.7.1(typescript@5.9.2)
       viem:
         specifier: ^2.33.2
         version: 2.33.2(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.25.76)
@@ -31,7 +31,7 @@ importers:
         specifier: ^0.7.10
         version: 0.7.10(@types/node@22.17.0)
       '@modelcontextprotocol/sdk':
-        specifier: ^1.17.0
+        specifier: ^1.17.1
         version: 1.17.1
       '@types/cors':
         specifier: ^2.8.19
@@ -160,8 +160,11 @@ packages:
   '@civic/hook-common@0.2.3':
     resolution: {integrity: sha512-hmPINYeFCUTYSVCP74jsU81PWNBFlIMyh+2tMeJGFwUrDZmgTzqrHS+WmswgPBZvbJqlr0wcJ+mS88YtL+nLjw==}
 
-  '@civic/passthrough-mcp-server@0.7.0-beta5':
-    resolution: {integrity: sha512-4we1aFh2XBLygtZRx71Nj3Rm/3c4i0kWvvZeVmc8w9tnPK3lyXOd1dGR4kziZsNH01989JzS1b+hA/f5KrRtgw==}
+  '@civic/hook-common@0.3.0':
+    resolution: {integrity: sha512-eSXZvSN13JTVhg6dlxcY0oUpe2b1/BHnB42Bs/mgk/cCPbBuVVShfe+U9akxYm7LJY60QrpZc6TqYnUcw/ulvQ==}
+
+  '@civic/passthrough-mcp-server@0.7.1':
+    resolution: {integrity: sha512-PmJOzvfJjC1TRGR1Vvv01XzmW6oogCVAWbmxFvBer9Aa4dzOH714dM3OnEc3Bgo1wyoiVkfPall8AW9S4AFaiQ==}
     engines: {node: '>=18.0.0'}
     hasBin: true
 
@@ -2761,9 +2764,20 @@ snapshots:
       - supports-color
       - typescript
 
-  '@civic/passthrough-mcp-server@0.7.0-beta5(typescript@5.9.2)':
+  '@civic/hook-common@0.3.0(typescript@5.9.2)':
     dependencies:
-      '@civic/hook-common': 0.2.3(typescript@5.9.2)
+      '@modelcontextprotocol/sdk': 1.17.1
+      '@trpc/client': 11.4.4(@trpc/server@11.4.4(typescript@5.9.2))(typescript@5.9.2)
+      '@trpc/server': 11.4.4(typescript@5.9.2)
+      superjson: 2.2.2
+      zod: 3.25.76
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
+
+  '@civic/passthrough-mcp-server@0.7.1(typescript@5.9.2)':
+    dependencies:
+      '@civic/hook-common': 0.3.0(typescript@5.9.2)
       '@modelcontextprotocol/sdk': 1.17.1
       content-type: 1.0.5
       eventsource-parser: 3.0.3
