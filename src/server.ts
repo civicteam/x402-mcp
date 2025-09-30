@@ -62,6 +62,12 @@ interface PaymentInfo {
   req?: IncomingMessage;
 }
 
+const payloadIsTransaction = (
+  payload: PaymentPayload['payload']
+): payload is PaymentPayload['payload'] & { transaction: string } => {
+  return Object.hasOwn(payload, 'transaction');
+};
+
 export class X402StreamableHTTPServerTransport extends StreamableHTTPServerTransport {
   private payTo: Address;
   private facilitator?: FacilitatorConfig;
@@ -196,6 +202,11 @@ export class X402StreamableHTTPServerTransport extends StreamableHTTPServerTrans
     try {
       decodedPayment = exact.evm.decodePayment(paymentHeader);
       decodedPayment.x402Version = 1;
+
+      if (payloadIsTransaction(decodedPayment.payload)) {
+        throw new Error('Payment missing authorization payload');
+      }
+
       console.log('   🔐 Decoded payment:', {
         scheme: decodedPayment.scheme,
         network: decodedPayment.network,
@@ -331,7 +342,6 @@ export class X402StreamableHTTPServerTransport extends StreamableHTTPServerTrans
         maxTimeoutSeconds: 60,
         asset: getAddress(asset.address),
         outputSchema: undefined,
-        extra: asset.eip712,
       },
     ];
   }
