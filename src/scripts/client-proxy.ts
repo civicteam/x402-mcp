@@ -3,7 +3,7 @@ import { type Chain, createWalletClient, http, publicActions } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import * as chains from 'viem/chains';
 import type { Wallet } from 'x402/types';
-import { createClientProxy } from '../src/proxy/index.js';
+import { createClientProxy } from '../proxy/index.js';
 
 /**
  * Client proxy script for X402 MCP

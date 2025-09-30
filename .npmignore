@@ -9,7 +9,6 @@
 
 # Source files (we only ship dist)
 src/
-scripts/
 example/
 
 # Test files

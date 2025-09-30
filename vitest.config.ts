@@ -10,7 +10,7 @@ export default defineConfig({
         'node_modules/**',
         'dist/**',
         'example/**',
-        'scripts/**',
+        'src/scripts/**',
         '**/*.config.ts',
         '**/*.test.ts',
         '**/*.spec.ts',
