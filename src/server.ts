@@ -21,10 +21,12 @@ import { type Address, getAddress } from 'viem';
 import { exact } from 'x402/schemes';
 import { findMatchingPaymentRequirements, processPriceToAtomicAmount } from 'x402/shared';
 import {
+  type ERC20TokenAmount,
   type FacilitatorConfig,
   type PaymentPayload,
   type PaymentRequirements,
   type Price,
+  type SPLTokenAmount,
   settleResponseHeader,
 } from 'x402/types';
 import { useFacilitator } from 'x402/verify';
@@ -64,9 +66,10 @@ interface PaymentInfo {
 
 const payloadIsTransaction = (
   payload: PaymentPayload['payload']
-): payload is PaymentPayload['payload'] & { transaction: string } => {
-  return Object.hasOwn(payload, 'transaction');
-};
+): payload is PaymentPayload['payload'] & { transaction: string } => Object.hasOwn(payload, 'transaction');
+
+const assetIsErc20 = (asset: ERC20TokenAmount['asset'] | SPLTokenAmount['asset']): asset is ERC20TokenAmount['asset'] =>
+  Object.hasOwn(asset, 'eip712');
 
 export class X402StreamableHTTPServerTransport extends StreamableHTTPServerTransport {
   private payTo: Address;
@@ -246,6 +249,8 @@ export class X402StreamableHTTPServerTransport extends StreamableHTTPServerTrans
         return;
       }
 
+      console.log('Decoded payment:', decodedPayment);
+      console.log('   🔍 Selected payment requirements:', selectedPaymentRequirements);
       const verifyResponse = await verify(decodedPayment, selectedPaymentRequirements);
       console.log('   📡 Verify response:', verifyResponse);
 
@@ -330,6 +335,11 @@ export class X402StreamableHTTPServerTransport extends StreamableHTTPServerTrans
 
     const { maxAmountRequired, asset } = atomicAmountForAsset;
 
+    if (!assetIsErc20(asset)) {
+      console.log('   ❌ Unsupported asset type:', asset);
+      throw new Error('Only ERC-20 asset payments are supported in this transport');
+    }
+
     return [
       {
         scheme: 'exact',
@@ -342,6 +352,7 @@ export class X402StreamableHTTPServerTransport extends StreamableHTTPServerTrans
         maxTimeoutSeconds: 60,
         asset: getAddress(asset.address),
         outputSchema: undefined,
+        extra: asset.eip712,
       },
     ];
   }
