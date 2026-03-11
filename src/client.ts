@@ -7,16 +7,18 @@ import { convertHeaders } from './util.js';
  * Creates a payment-aware MCP client transport that automatically handles X402 payments
  * @param serverUrl - The MCP server URL
  * @param wallet - A viem WalletClient configured with account and chain
- * @param paymentCallback
+ * @param paymentCallback - Called with the transaction hash after a successful payment
+ * @param maxPaymentAmount - Maximum payment amount in atomic units (e.g. 10_000_000 = $10 USDC). Defaults to x402-fetch's built-in limit ($0.10).
  * @returns StreamableHTTPClientTransport configured with X402 payment capabilities
  */
 export function makePaymentAwareClientTransport(
   serverUrl: string | URL,
   wallet: Wallet,
-  paymentCallback: (txHash: string) => void = () => {}
+  paymentCallback: (txHash: string) => void = () => {},
+  maxPaymentAmount?: bigint
 ): StreamableHTTPClientTransport {
   // Create x402-enabled fetch
-  const x402Fetch = wrapFetchWithPayment(fetch, wallet);
+  const x402Fetch = wrapFetchWithPayment(fetch, wallet, maxPaymentAmount);
 
   // Create a wrapper that ensures proper headers for MCP
   const fetchWithPayment = async (input: RequestInfo, init: RequestInit) => {

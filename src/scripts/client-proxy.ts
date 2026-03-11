@@ -17,6 +17,7 @@ import { createClientProxy } from '../proxy/index.js';
  *   MODE - Transport mode: "stdio" or "http" (default: stdio)
  *   PORT - Port for HTTP mode (default: 3000)
  *   NETWORK - Network to use (default: base-sepolia)
+ *   MAX_PAYMENT - Maximum payment amount in USD (e.g. "10" for $10). Default: $0.10
  */
 
 async function main() {
@@ -26,6 +27,9 @@ async function main() {
   const mode = (process.env.MODE || 'stdio').toLowerCase();
   const port = parseInt(process.env.PORT || '3000');
   const network = process.env.NETWORK || 'base-sepolia';
+  const maxPaymentAmount = process.env.MAX_PAYMENT
+    ? BigInt(Math.round(parseFloat(process.env.MAX_PAYMENT) * 1e6))
+    : undefined;
 
   // Validate required parameters
   if (!targetUrl) {
@@ -90,6 +94,7 @@ async function main() {
     logStream(`📍 Target URL: ${targetUrl}`);
     logStream(`💳 Wallet: ${account.address}`);
     logStream(`🌐 Network: ${chain.name}`);
+    logStream(`💰 Max payment: ${maxPaymentAmount ? `$${Number(maxPaymentAmount) / 1e6}` : '$0.10 (default)'}`);
     logStream(`🔌 Mode: ${mode}`);
     if (mode === 'http') {
       logStream(`🔗 Port: ${port}`);
@@ -101,6 +106,7 @@ async function main() {
       wallet: wallet as Wallet,
       mode: mode as 'stdio' | 'http',
       port: mode === 'http' ? port : undefined,
+      maxPaymentAmount,
     });
 
     if (mode === 'http') {

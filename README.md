@@ -248,6 +248,7 @@ Environment variables:
 - `MODE` (optional): Transport mode - "stdio" or "http" (default: stdio)
 - `PORT` (optional): Port for HTTP mode (default: 3000)
 - `NETWORK` (optional): Network/chain name from viem (default: baseSepolia). Examples: mainnet, sepolia, baseSepolia, optimism, arbitrum, polygon
+- `MAX_PAYMENT` (optional): Maximum payment amount in USD per tool call (e.g. "10" for $10). Default: 0.10
 
 
 #### Programmatic Integration
