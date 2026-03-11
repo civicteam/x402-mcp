@@ -23,6 +23,7 @@ export async function createClientProxy(
   params: {
     targetUrl: string;
     wallet: Wallet;
+    maxPaymentAmount?: bigint;
   } & (
     | {
         mode: 'stdio';
@@ -34,7 +35,12 @@ export async function createClientProxy(
   )
 ): Promise<PassthroughProxy> {
   // Create the payment-aware transport for the target
-  const paymentAwareTransport = makePaymentAwareClientTransport(params.targetUrl, params.wallet);
+  const paymentAwareTransport = makePaymentAwareClientTransport(
+    params.targetUrl,
+    params.wallet,
+    undefined,
+    params.maxPaymentAmount,
+  );
 
   if (params.mode === 'stdio') {
     // Create stdio proxy configuration
