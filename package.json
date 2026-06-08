@@ -57,5 +57,13 @@
     "typescript": "^5.7.3",
     "vitest": "^3.2.4",
     "zod": "^3.25.64"
+  },
+  "homepage": "https://github.com/civicteam/x402-mcp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/civicteam/x402-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/civicteam/x402-mcp/issues"
   }
 }
