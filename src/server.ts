@@ -167,7 +167,7 @@ export class X402StreamableHTTPServerTransport extends StreamableHTTPServerTrans
 
     // Check if this is a tool call that requires payment
     const messages = Array.isArray(parsedBody) ? parsedBody : [parsedBody];
-    const toolCall = messages.find(
+    const paidToolCalls = messages.filter(
       (msg): msg is JSONRPCRequest & { params: ToolCallParams } =>
         msg.method === 'tools/call' &&
         msg.params &&
@@ -177,11 +177,27 @@ export class X402StreamableHTTPServerTransport extends StreamableHTTPServerTrans
         this.toolPricing[msg.params.name] !== undefined
     );
 
-    if (!toolCall) {
+    if (paidToolCalls.length === 0) {
       console.log('   ✅ No paid tool calls, delegating to transport');
       return super.handleRequest(req, res, parsedBody);
     }
 
+    // One X-PAYMENT can satisfy one exact requirement. find() used to verify
+    // only the first priced tools/call, then super.handleRequest ran the rest.
+    if (paidToolCalls.length > 1) {
+      const first = paidToolCalls[0];
+      console.log('   ❌ Batch contains more than one paid tool call');
+      res.writeHead(402).end(
+        JSON.stringify({
+          x402Version: 1,
+          error: 'Batch requests may include at most one paid tool call',
+          accepts: this.getPaymentRequirementsForTool(first.params.name, this.toolPricing[first.params.name]),
+        })
+      );
+      return;
+    }
+
+    const toolCall = paidToolCalls[0];
     const toolName = toolCall.params.name;
     const toolPrice = this.toolPricing[toolName];
     console.log(`   💰 Found paid tool call: ${toolName} (${toolPrice})`);

@@ -334,6 +334,32 @@ describe('X402StreamableHTTPServerTransport', () => {
       expect(writeHeadSpy).toHaveBeenCalledWith(402, undefined);
       expect(endSpy).toHaveBeenCalled();
     });
+
+    it('should return 402 when a batch includes a second paid tool', async () => {
+      transport = new X402StreamableHTTPServerTransport({
+        payTo: '0x123',
+        toolPricing: {
+          'cheap-tool': '$0.01',
+          'expensive-tool': '$1.00',
+        },
+        sessionIdGenerator: undefined,
+      });
+
+      vi.mocked(exact.evm.decodePayment).mockReturnValue(createMockPaymentPayload());
+      mockReq.headers = { 'x-payment': 'valid-payment' };
+      const body = [
+        { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'cheap-tool' } },
+        { jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'expensive-tool' } },
+      ];
+
+      await transport.handleRequest(mockReq as IncomingMessage, mockRes as ServerResponse, body);
+
+      expect(writeHeadSpy).toHaveBeenCalledWith(402, undefined);
+      expect(endSpy).toHaveBeenCalled();
+      expect(endSpy.mock.calls[0][0]).toContain('at most one paid tool call');
+      // A payment for the cheap tool must not unlock the expensive sibling.
+      expect(mockVerify).not.toHaveBeenCalled();
+    });
   });
 
   describe('send', () => {
